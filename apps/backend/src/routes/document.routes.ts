@@ -7,6 +7,8 @@ import {
   getDocumentByIdHandler,
   deleteDocumentHandler,
   translateDocumentHandler,
+  askDocumentQuestionHandler,
+  getDocumentQuestionsHandler,
 } from '../controllers/document.controller.js';
 import { validateFileSignature } from '../utils/file-validator.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
@@ -40,6 +42,18 @@ router.get('/:id', getDocumentByIdHandler);
  * Translate document analysis to Tamil, Telugu, Hindi, or English (Module 5)
  */
 router.post('/:id/translate', translateDocumentHandler);
+
+/**
+ * POST /api/v1/documents/:id/ask
+ * Ask follow-up question grounded in document (Module 8)
+ */
+router.post('/:id/ask', askDocumentQuestionHandler);
+
+/**
+ * GET /api/v1/documents/:id/questions
+ * Get conversation history for document (Module 8)
+ */
+router.get('/:id/questions', getDocumentQuestionsHandler);
 
 /**
  * DELETE /api/v1/documents/:id

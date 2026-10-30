@@ -4,7 +4,9 @@ import { validateFileSignature } from '../utils/file-validator.js';
 import {
   analyzeDocumentWithGemini,
   translateAnalysisWithGemini,
+  answerDocumentQuestionWithGemini,
 } from '../services/gemini.service.js';
+import { askQuestionSchema } from '../validators/question.validator.js';
 import { getSupabase } from '../config/supabase.js';
 
 export async function analyzeDocumentHandler(
@@ -304,6 +306,141 @@ export async function translateDocumentHandler(
       success: true,
       language: targetLanguage,
       analysis: translatedAnalysis,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/v1/documents/:id/ask
+ * Grounded Q&A over document analysis (Module 8)
+ */
+export async function askDocumentQuestionHandler(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
+    const docId = req.params.id;
+    const validated = askQuestionSchema.parse(req.body);
+
+    const supabase = getSupabase();
+
+    // 1. Verify document ownership
+    const { data: doc, error: docError } = await supabase
+      .from('documents')
+      .select('id, user_id, analysis')
+      .eq('id', docId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (docError) {
+      throw new Error(`Database error verifying document: ${docError.message}`);
+    }
+
+    if (!doc) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Document not found or access denied.' },
+      });
+      return;
+    }
+
+    // 2. Generate grounded answer with Gemini
+    const qaResult = await answerDocumentQuestionWithGemini(
+      doc.analysis,
+      validated.question,
+      validated.language
+    );
+
+    // 3. Persist conversation into document_questions
+    const { data: savedQuestion, error: saveError } = await supabase
+      .from('document_questions')
+      .insert({
+        document_id: docId,
+        user_id: userId,
+        question: validated.question,
+        answer: qaResult.answer,
+        is_grounded: qaResult.is_grounded,
+      })
+      .select('id, document_id, user_id, question, answer, is_grounded, created_at')
+      .single();
+
+    if (saveError || !savedQuestion) {
+      throw new Error(`Failed to save question history: ${saveError?.message || 'Unknown database error'}`);
+    }
+
+    res.status(201).json({
+      success: true,
+      question: savedQuestion,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/v1/documents/:id/questions
+ * Retrieves past conversation history for the document
+ */
+export async function getDocumentQuestionsHandler(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
+    const docId = req.params.id;
+    const supabase = getSupabase();
+
+    // Verify document ownership first
+    const { data: doc, error: docError } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('id', docId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (docError || !doc) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Document not found or access denied.' },
+      });
+      return;
+    }
+
+    const { data: questions, error } = await supabase
+      .from('document_questions')
+      .select('id, document_id, user_id, question, answer, is_grounded, created_at')
+      .eq('document_id', docId)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      throw new Error(`Database error fetching questions: ${error.message}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      questions: questions || [],
     });
   } catch (error) {
     next(error);

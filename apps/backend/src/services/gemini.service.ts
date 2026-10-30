@@ -18,10 +18,10 @@ function getGeminiClient(): GoogleGenerativeAI {
 }
 
 const langInstructions: Record<string, string> = {
-  ta: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Tamil (தமிழ்). Keep dates, numbers, currency values (₹), names, and official codes intact.',
-  te: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Telugu (తెలుగు). Keep dates, numbers, currency values (₹), names, and official codes intact.',
-  hi: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Hindi (हिंदी). Keep dates, numbers, currency values (₹), names, and official codes intact.',
-  en: 'Provide plain_summary and descriptions at an accessible 5th-grade reading level in English.',
+  ta: 'Provide your answer in simple, natural, accessible Tamil (தமிழ்). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  te: 'Provide your answer in simple, natural, accessible Telugu (తెలుగు). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  hi: 'Provide your answer in simple, natural, accessible Hindi (हिंदी). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  en: 'Provide your answer in simple, clear, 5th-grade reading level English.',
 };
 
 export async function analyzeDocumentWithGemini(
@@ -31,7 +31,6 @@ export async function analyzeDocumentWithGemini(
 ): Promise<DocumentAnalysis> {
   const client = getGeminiClient();
 
-  // gemini-1.5-flash offers fast, accurate multimodal OCR and JSON output
   const model = client.getGenerativeModel({
     model: 'gemini-1.5-flash',
     generationConfig: {
@@ -107,7 +106,6 @@ CRITICAL ACCESSIBILITY RULES:
 
 /**
  * Translates an existing document analysis into the selected language (Module 5).
- * Preserves original amounts, dates, and sender names without re-running full OCR.
  */
 export async function translateAnalysisWithGemini(
   originalAnalysis: DocumentAnalysis,
@@ -170,6 +168,84 @@ ${JSON.stringify(originalAnalysis, null, 2)}
     return validatedData;
   } catch (error: any) {
     console.error('[Gemini Translation Error]:', error);
+    mapAndThrowGeminiError(error);
+  }
+}
+
+export interface GroundedQAResult {
+  answer: string;
+  is_grounded: boolean;
+}
+
+/**
+ * Answers user questions grounded strictly in the document content (Module 8).
+ */
+export async function answerDocumentQuestionWithGemini(
+  documentAnalysis: DocumentAnalysis,
+  question: string,
+  targetLanguage: string = 'en'
+): Promise<GroundedQAResult> {
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1,
+    },
+  });
+
+  const selectedLangInstruction = langInstructions[targetLanguage] || langInstructions.en;
+
+  const prompt = `
+You are ClearDoc's Grounded Q&A Assistant. A user is asking a question about a document they uploaded.
+
+DOCUMENT CONTEXT:
+Document Type: ${documentAnalysis.doc_type}
+Sender: ${documentAnalysis.sender}
+Summary: ${documentAnalysis.plain_summary}
+Key Facts: ${JSON.stringify(documentAnalysis.key_facts)}
+Deadlines: ${JSON.stringify(documentAnalysis.deadlines)}
+Risks: ${JSON.stringify(documentAnalysis.risks)}
+Next Steps: ${JSON.stringify(documentAnalysis.next_steps)}
+Items Needing Verification: ${JSON.stringify(documentAnalysis.needs_human_check)}
+
+USER'S QUESTION:
+"${question}"
+
+LANGUAGE REQUIREMENT:
+${selectedLangInstruction}
+
+STRICT GROUNDING & ACCESSIBILITY RULES:
+1. ONLY answer using facts explicitly present in the document context above.
+2. NEVER guess, assume, or invent details not stated in the document.
+3. If the document DOES NOT contain the answer, set "is_grounded": false, and answer clearly stating that this specific information is not mentioned in their document.
+4. Do NOT give definitive medical or legal counsel. If relevant, remind the user to consult a licensed professional.
+5. Preserve all numbers, amounts, dates, and account numbers verbatim.
+6. Return a valid JSON object in this exact shape:
+{
+  "answer": "string (the plain, compassionate, accessible answer)",
+  "is_grounded": true | false
+}
+`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rawText = response.text().trim();
+
+    const cleanJson = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .trim();
+
+    const parsed = JSON.parse(cleanJson);
+    return {
+      answer: String(parsed.answer || 'I could not find an answer in your document.'),
+      is_grounded: Boolean(parsed.is_grounded ?? true),
+    };
+  } catch (error: any) {
+    console.error('[Gemini Q&A Error]:', error);
     mapAndThrowGeminiError(error);
   }
 }

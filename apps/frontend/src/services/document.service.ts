@@ -50,6 +50,16 @@ export interface DocumentAnalysisResponse {
   document: DocumentRecord;
 }
 
+export interface DocumentQuestion {
+  id: string;
+  document_id: string;
+  user_id: string;
+  question: string;
+  answer: string;
+  is_grounded: boolean;
+  created_at: string;
+}
+
 export interface UploadValidationResponse {
   success: boolean;
   message: string;
@@ -133,5 +143,26 @@ export async function translateDocument(
     language: string;
     analysis: DocumentRecord['analysis'];
   }>(`/documents/${id}/translate`, { language });
+  return response.data;
+}
+
+export async function askDocumentQuestion(
+  id: string,
+  question: string,
+  language: string = 'en'
+): Promise<{ success: boolean; question: DocumentQuestion }> {
+  const response = await api.post<{ success: boolean; question: DocumentQuestion }>(
+    `/documents/${id}/ask`,
+    { question, language }
+  );
+  return response.data;
+}
+
+export async function getDocumentQuestions(
+  id: string
+): Promise<{ success: boolean; questions: DocumentQuestion[] }> {
+  const response = await api.get<{ success: boolean; questions: DocumentQuestion[] }>(
+    `/documents/${id}/questions`
+  );
   return response.data;
 }

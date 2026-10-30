@@ -3,6 +3,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 import { getDocumentById, translateDocument, DocumentRecord } from '../services/document.service';
 import { useA11y, SupportedLanguage } from '../context/A11yContext';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { DocumentQA } from '../components/DocumentQA';
 import {
   FileText,
   Building,
@@ -432,6 +433,9 @@ export const DocumentDetailPage: React.FC = () => {
           <p className="text-slate-500 text-sm">No immediate actions required.</p>
         )}
       </div>
+
+      {/* Module 8: Grounded Follow-up Q&A Interface */}
+      <DocumentQA documentId={document.id} language={activeLang} />
     </div>
   );
 };
