@@ -184,3 +184,4 @@ export function useSpeechSynthesis(currentLangCode: string): UseSpeechSynthesisR
     error,
   };
 }
+

@@ -88,6 +88,10 @@ export async function analyzeDocumentHandler(
   }
 }
 
+/**
+ * GET /api/v1/documents
+ * List user's documents with pagination and newest-first sorting
+ */
 export async function getDocumentsHandler(
   req: AuthenticatedRequest,
   res: Response,
@@ -95,27 +99,55 @@ export async function getDocumentsHandler(
 ): Promise<void> {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string, 10) || 10));
+    const offset = (page - 1) * limit;
+
     const supabase = getSupabase();
 
-    const { data: docs, error } = await supabase
+    const { data: docs, count, error } = await supabase
       .from('documents')
-      .select('id, file_name, mime_type, doc_type, sender, plain_summary, created_at')
+      .select('id, file_name, mime_type, doc_type, sender, plain_summary, created_at', {
+        count: 'exact',
+      })
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw new Error(`Database error fetching documents: ${error.message}`);
     }
 
+    const total = count ?? (docs ? docs.length : 0);
+    const totalPages = Math.ceil(total / limit) || 1;
+
     res.status(200).json({
       success: true,
       documents: docs || [],
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     next(error);
   }
 }
 
+/**
+ * GET /api/v1/documents/:id
+ * Retrieve specific document details and analysis strictly verifying ownership
+ */
 export async function getDocumentByIdHandler(
   req: AuthenticatedRequest,
   res: Response,
@@ -123,6 +155,14 @@ export async function getDocumentByIdHandler(
 ): Promise<void> {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
     const docId = req.params.id;
     const supabase = getSupabase();
 
@@ -131,7 +171,7 @@ export async function getDocumentByIdHandler(
       .select('id, user_id, file_name, mime_type, doc_type, sender, plain_summary, analysis, created_at')
       .eq('id', docId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !doc) {
       res.status(404).json({
@@ -150,6 +190,10 @@ export async function getDocumentByIdHandler(
   }
 }
 
+/**
+ * DELETE /api/v1/documents/:id
+ * Delete a user document with strict ownership verification
+ */
 export async function deleteDocumentHandler(
   req: AuthenticatedRequest,
   res: Response,
@@ -157,17 +201,49 @@ export async function deleteDocumentHandler(
 ): Promise<void> {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
     const docId = req.params.id;
     const supabase = getSupabase();
 
-    const { error } = await supabase
+    // Verify ownership first
+    const { data: existingDoc, error: checkError } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('id', docId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (checkError) {
+      throw new Error(`Database error verifying document: ${checkError.message}`);
+    }
+
+    if (!existingDoc) {
+      res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Document not found or access denied.',
+        },
+      });
+      return;
+    }
+
+    // Delete document (cascade removes related questions & actions)
+    const { error: deleteError } = await supabase
       .from('documents')
       .delete()
       .eq('id', docId)
       .eq('user_id', userId);
 
-    if (error) {
-      throw new Error(`Failed to delete document: ${error.message}`);
+    if (deleteError) {
+      throw new Error(`Failed to delete document: ${deleteError.message}`);
     }
 
     res.status(200).json({
@@ -181,7 +257,7 @@ export async function deleteDocumentHandler(
 
 /**
  * POST /api/v1/documents/:id/translate
- * Translates the document analysis into English, Tamil, Telugu, or Hindi (Module 5)
+ * Translates document analysis into English, Tamil, Telugu, or Hindi (Module 5)
  */
 export async function translateDocumentHandler(
   req: AuthenticatedRequest,
@@ -190,6 +266,14 @@ export async function translateDocumentHandler(
 ): Promise<void> {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
+      return;
+    }
+
     const docId = req.params.id;
     const targetLanguage = req.body.language || 'en';
 
@@ -201,7 +285,7 @@ export async function translateDocumentHandler(
       .select('id, user_id, analysis')
       .eq('id', docId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !doc) {
       res.status(404).json({

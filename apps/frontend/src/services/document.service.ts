@@ -1,5 +1,28 @@
 import api from './api';
 
+export interface DocumentListItem {
+  id: string;
+  file_name: string;
+  mime_type: string;
+  doc_type: string;
+  sender: string;
+  plain_summary: string;
+  created_at: string;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface DocumentListResponse {
+  success: boolean;
+  documents: DocumentListItem[];
+  pagination: PaginationMeta;
+}
+
 export interface DocumentRecord {
   id: string;
   user_id: string;
@@ -81,8 +104,23 @@ export async function analyzeDocument(
   return response.data;
 }
 
+export async function getDocuments(
+  page: number = 1,
+  limit: number = 10
+): Promise<DocumentListResponse> {
+  const response = await api.get<DocumentListResponse>('/documents', {
+    params: { page, limit },
+  });
+  return response.data;
+}
+
 export async function getDocumentById(id: string): Promise<DocumentAnalysisResponse> {
   const response = await api.get<DocumentAnalysisResponse>(`/documents/${id}`);
+  return response.data;
+}
+
+export async function deleteDocument(id: string): Promise<{ success: boolean; message: string }> {
+  const response = await api.delete<{ success: boolean; message: string }>(`/documents/${id}`);
   return response.data;
 }
 
