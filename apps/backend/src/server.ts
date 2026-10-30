@@ -16,11 +16,12 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, or Postman)
       if (!origin) return callback(null, true);
-      // In development allow any localhost or matching configured frontend
+      // In development and production allow configured frontend, localhost, or any Vercel domain
       if (
         origin === config.frontendUrl ||
         /^http:\/\/localhost:\d+$/.test(origin) ||
-        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) ||
+        /^https:\/\/.*\.vercel\.app$/.test(origin)
       ) {
         return callback(null, true);
       }

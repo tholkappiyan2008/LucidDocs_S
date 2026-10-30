@@ -391,6 +391,7 @@ Detailed engineering documentation is available in the [`docs/`](./docs) directo
 | **[Features & Roadmap](./docs/FEATURES.md)** | Feature status matrix for V1 release and planned V2 milestones. |
 | **[Database Schema](./docs/DATABASE.md)** | Supabase PostgreSQL tables, foreign keys, constraints, and indexes. |
 | **[API Documentation](./docs/API-DOCUMENTATION.md)** | Full REST endpoint reference, JSON payloads, and response status codes. |
+| **[Deployment Guide](./docs/DEPLOYMENT.md)** | Production guide for Vercel (Frontend) and Render (Backend). |
 | **[AI Prompt Archive](./docs/prompts/)** | Prompts used for planning, UX design, backend development, and testing. |
 
 ---
@@ -439,3 +440,4 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](./LICENS
 ---
 
 **Built with pride to make complex paperwork accessible to everyone.**
+

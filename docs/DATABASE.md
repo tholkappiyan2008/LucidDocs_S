@@ -178,3 +178,4 @@ The schema is created and managed through standard SQL migrations:
    TO postgres, service_role, authenticated, anon;
    ```
    All direct database queries are routed through the backend using the Supabase `service_role` key, preventing direct client exposure.
+

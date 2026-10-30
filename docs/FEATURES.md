@@ -153,3 +153,4 @@ This document details all completed, partially completed, and planned capabiliti
 | **One-Click Calendar Sync (.ics export)** | Direct export of deadline reminders into Google Calendar, Apple, and Outlook. | Version 2.1 |
 | **Automated Dispute & Inquiry Drafter** | Generation of pre-filled dispute letters for erroneous charges or billing issues. | Version 2.2 |
 | **Multi-Page PDF Chunking & OCR Stitching** | Support for enterprise documents exceeding 15 pages with parallel analysis. | Version 2.3 |
+

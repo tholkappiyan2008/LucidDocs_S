@@ -60,3 +60,4 @@ Define the security and privacy model for ClearDoc:
 2. How should environment variables be segregated so the Supabase Service Role Key and Groq API Key never leak to the client bundle?
 3. Define the cascading deletion behavior in PostgreSQL when a user purges a document.
 ```
+

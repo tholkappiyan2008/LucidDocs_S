@@ -218,3 +218,4 @@ erDiagram
 2. **Magic-Byte File Integrity**: In addition to client-side MIME checks, the backend validates binary magic bytes (`%PDF-`, `PNG \x89PNG`, `JPEG \xFF\xD8\xFF`) to prevent extension spoofing.
 3. **Multi-User Ownership Isolation**: Every database query on `/documents` and `/documents/:id/ask` filters strictly by `WHERE user_id = req.user.id`. Users cannot view, query, or delete documents owned by other accounts.
 4. **Credential Segregation**: The frontend client never has access to the Supabase Secret Key or Groq API credentials. All third-party communication routes through the backend.
+

@@ -148,3 +148,4 @@ The project was prepared for open-source publication:
 - Ensured `.env.example` contains only safe placeholder values.
 - Verified production builds (`npm run build:backend` and `npm run build:frontend`) pass with zero errors.
 - Structured comprehensive architectural and technical documentation.
+

@@ -12,6 +12,8 @@
     "dev:frontend": "npm --workspace=apps/frontend run dev",
     "build:backend": "npm --workspace=apps/backend run build",
     "build:frontend": "npm --workspace=apps/frontend run build",
+    "start": "npm --workspace=apps/backend run start",
+    "start:backend": "npm --workspace=apps/backend run start",
     "test:backend": "npm --workspace=apps/backend test"
   },
   "keywords": [

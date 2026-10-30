@@ -100,3 +100,4 @@ Build the interactive document processing frontend in React + TypeScript:
    - Fetch historical documents from `GET /api/v1/documents`.
    - Provide search by filename, filter by document category, and quick delete with optimistic UI updates.
 ```
+

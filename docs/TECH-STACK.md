@@ -65,3 +65,4 @@ This document catalogs every technology, framework, library, and development too
 | **PostCSS & Autoprefixer** | Vendor prefixing and CSS transformation | `apps/frontend/postcss.config.js` |
 | **Git & GitHub** | Version control and collaborative development | `.git/` |
 | **Dotenv** | Secure local environment loading | `apps/backend/src/config/env.ts` |
+

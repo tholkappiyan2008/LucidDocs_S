@@ -311,3 +311,4 @@ The ClearDoc backend exposes a RESTful API with JSON payloads over HTTP. All end
     "ai_model": "qwen/qwen3.8-27b"
   }
   ```
+

@@ -86,3 +86,4 @@ Audit and restore the application:
 4. Ensure all modal overlays, sticky navigation bars, and drag-and-drop file zones maintain smooth transition curves (`transition-all duration-200 ease-in-out`).
 5. Verify zero layout shifting (CLS) across mobile (375px), tablet (768px), and desktop (1280px) breakpoints.
 ```
+
