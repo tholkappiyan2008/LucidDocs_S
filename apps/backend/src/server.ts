@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config, validateRequiredEnv } from './config/env.js';
 import { isSupabaseConfigured } from './config/supabase.js';
 import authRoutes from './routes/auth.routes.js';
+import documentRoutes from './routes/document.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 validateRequiredEnv();
@@ -44,6 +45,7 @@ app.get('/api/v1/health', (_req, res) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/documents', documentRoutes);
 
 // 404 Route Handler
 app.use((_req, res) => {
@@ -66,3 +68,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

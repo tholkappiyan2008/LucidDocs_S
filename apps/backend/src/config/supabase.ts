@@ -27,3 +27,4 @@ export function getSupabase(): SupabaseClient {
 export function isSupabaseConfigured(): boolean {
   return Boolean(config.supabaseUrl && config.supabaseServiceRoleKey);
 }
+

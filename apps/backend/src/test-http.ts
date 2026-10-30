@@ -42,13 +42,13 @@ async function runHttpTests() {
     // 1. Health check endpoint
     const healthRes = await fetch(`${baseUrl}/health`);
     assert(healthRes.status === 200, 'Health endpoint returns 200 OK');
-    const healthData = await healthRes.json();
+    const healthData = (await healthRes.json()) as any;
     assert(healthData.status === 'healthy', 'Health payload status is healthy');
 
     // 2. Protected route rejection without token
     const meRes = await fetch(`${baseUrl}/auth/me`);
     assert(meRes.status === 401, 'Unauthenticated /auth/me returns 401 Unauthorized');
-    const meData = await meRes.json();
+    const meData = (await meRes.json()) as any;
     assert(meData.success === false, 'Me error response success is false');
     assert(meData.error.code === 'UNAUTHORIZED', 'Error code is UNAUTHORIZED');
 
@@ -63,7 +63,7 @@ async function runHttpTests() {
       }),
     });
     assert(regInvalidEmail.status === 400, 'Register with bad email returns 400 Bad Request');
-    const regEmailData = await regInvalidEmail.json();
+    const regEmailData = (await regInvalidEmail.json()) as any;
     assert(regEmailData.error.code === 'VALIDATION_ERROR', 'Error code is VALIDATION_ERROR');
 
     // 4. Register with short password
@@ -102,3 +102,4 @@ async function runHttpTests() {
 }
 
 runHttpTests();
+

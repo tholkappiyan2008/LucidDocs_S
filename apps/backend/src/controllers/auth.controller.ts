@@ -178,3 +178,4 @@ export async function getMe(req: AuthenticatedRequest, res: Response, next: Next
     next(error);
   }
 }
+

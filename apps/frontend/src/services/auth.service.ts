@@ -15,3 +15,4 @@ export async function getCurrentUser(): Promise<{ success: boolean; user: User }
   const response = await api.get<{ success: boolean; user: User }>('/auth/me');
   return response.data;
 }
+

@@ -27,3 +27,4 @@ export function validateRequiredEnv() {
     console.warn(`[WARNING] Set these in .env file to enable live Supabase & Gemini integrations.`);
   }
 }
+

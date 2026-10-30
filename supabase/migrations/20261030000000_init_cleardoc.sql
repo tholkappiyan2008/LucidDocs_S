@@ -60,3 +60,4 @@ CREATE TABLE IF NOT EXISTS document_actions (
 
 -- Index for document action history
 CREATE INDEX IF NOT EXISTS idx_actions_document_id ON document_actions(document_id);
+
