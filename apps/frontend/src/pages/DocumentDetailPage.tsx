@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { getDocumentById, translateDocument, DocumentRecord } from '../services/document.service';
 import { useA11y, SupportedLanguage } from '../context/A11yContext';
+import { AudioPlayer } from '../components/AudioPlayer';
 import {
   FileText,
   Building,
@@ -251,6 +252,9 @@ export const DocumentDetailPage: React.FC = () => {
           {document.file_name}
         </h1>
       </div>
+
+      {/* Module 6: Voice Read-Aloud Audio Player */}
+      <AudioPlayer analysis={activeAnalysis} language={activeLang} />
 
       {/* Human Verification Warning Box (Module 4 Req 7) */}
       {activeAnalysis.needs_human_check && activeAnalysis.needs_human_check.length > 0 && (
