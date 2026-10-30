@@ -1,0 +1,26 @@
+{
+  "name": "cleardoc",
+  "version": "1.0.0",
+  "description": "ClearDoc — AI-Powered Document Accessibility & Understanding Agent",
+  "private": true,
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace=apps/backend run dev",
+    "dev:frontend": "npm --workspace=apps/frontend run dev",
+    "build:backend": "npm --workspace=apps/backend run build",
+    "build:frontend": "npm --workspace=apps/frontend run build",
+    "test:backend": "npm --workspace=apps/backend test"
+  },
+  "keywords": [
+    "accessibility",
+    "ai",
+    "gemini",
+    "document-analysis",
+    "inclusion"
+  ],
+  "author": "ClearDoc Team",
+  "license": "MIT"
+}
