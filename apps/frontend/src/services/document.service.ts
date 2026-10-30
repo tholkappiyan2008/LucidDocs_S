@@ -1,28 +1,30 @@
 import api from './api';
 
-export interface DocumentAnalysisResponse {
-  success: boolean;
-  message?: string;
-  document: {
-    id: string;
-    user_id: string;
-    file_name: string;
-    mime_type: string;
+export interface DocumentRecord {
+  id: string;
+  user_id: string;
+  file_name: string;
+  mime_type: string;
+  doc_type: string;
+  sender: string;
+  plain_summary: string;
+  analysis: {
     doc_type: string;
     sender: string;
     plain_summary: string;
-    analysis: {
-      doc_type: string;
-      sender: string;
-      plain_summary: string;
-      key_facts: Array<{ label: string; value: string; confidence: number }>;
-      deadlines: Array<{ what: string; date: string }>;
-      risks: Array<{ level: 'low' | 'medium' | 'high' | 'critical'; note: string }>;
-      next_steps: string[];
-      needs_human_check: string[];
-    };
-    created_at: string;
+    key_facts: Array<{ label: string; value: string; confidence: number }>;
+    deadlines: Array<{ what: string; date: string }>;
+    risks: Array<{ level: 'low' | 'medium' | 'high' | 'critical'; note: string }>;
+    next_steps: string[];
+    needs_human_check: string[];
   };
+  created_at: string;
+}
+
+export interface DocumentAnalysisResponse {
+  success: boolean;
+  message?: string;
+  document: DocumentRecord;
 }
 
 export interface UploadValidationResponse {
@@ -76,5 +78,22 @@ export async function analyzeDocument(
     }
   );
 
+  return response.data;
+}
+
+export async function getDocumentById(id: string): Promise<DocumentAnalysisResponse> {
+  const response = await api.get<DocumentAnalysisResponse>(`/documents/${id}`);
+  return response.data;
+}
+
+export async function translateDocument(
+  id: string,
+  language: string
+): Promise<{ success: boolean; language: string; analysis: DocumentRecord['analysis'] }> {
+  const response = await api.post<{
+    success: boolean;
+    language: string;
+    analysis: DocumentRecord['analysis'];
+  }>(`/documents/${id}/translate`, { language });
   return response.data;
 }

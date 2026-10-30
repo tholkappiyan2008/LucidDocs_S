@@ -277,6 +277,7 @@ export const UploadPage: React.FC = () => {
           >
             <option value="en">English (Simplified)</option>
             <option value="ta">தமிழ் (Tamil)</option>
+            <option value="te">తెలుగు (Telugu)</option>
             <option value="hi">हिंदी (Hindi)</option>
           </select>
         </div>

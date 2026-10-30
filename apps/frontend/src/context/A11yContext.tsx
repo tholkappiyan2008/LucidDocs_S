@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type SupportedLanguage = 'en' | 'ta' | 'hi';
+export type SupportedLanguage = 'en' | 'ta' | 'te' | 'hi';
 
 interface A11yContextType {
   highContrast: boolean;
@@ -24,7 +24,7 @@ export const A11yProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     const saved = localStorage.getItem('cleardoc_language') as SupportedLanguage;
-    return saved === 'ta' || saved === 'hi' ? saved : 'en';
+    return saved === 'ta' || saved === 'te' || saved === 'hi' ? saved : 'en';
   });
 
   useEffect(() => {

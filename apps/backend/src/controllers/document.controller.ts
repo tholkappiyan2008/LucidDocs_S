@@ -1,7 +1,10 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import { validateFileSignature } from '../utils/file-validator.js';
-import { analyzeDocumentWithGemini } from '../services/gemini.service.js';
+import {
+  analyzeDocumentWithGemini,
+  translateAnalysisWithGemini,
+} from '../services/gemini.service.js';
 import { getSupabase } from '../config/supabase.js';
 
 export async function analyzeDocumentHandler(
@@ -170,6 +173,53 @@ export async function deleteDocumentHandler(
     res.status(200).json({
       success: true,
       message: 'Document deleted successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/v1/documents/:id/translate
+ * Translates the document analysis into English, Tamil, Telugu, or Hindi (Module 5)
+ */
+export async function translateDocumentHandler(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    const docId = req.params.id;
+    const targetLanguage = req.body.language || 'en';
+
+    const supabase = getSupabase();
+
+    // Fetch document verifying ownership
+    const { data: doc, error } = await supabase
+      .from('documents')
+      .select('id, user_id, analysis')
+      .eq('id', docId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !doc) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Document not found or access denied.' },
+      });
+      return;
+    }
+
+    const translatedAnalysis = await translateAnalysisWithGemini(
+      doc.analysis,
+      targetLanguage
+    );
+
+    res.status(200).json({
+      success: true,
+      language: targetLanguage,
+      analysis: translatedAnalysis,
     });
   } catch (error) {
     next(error);

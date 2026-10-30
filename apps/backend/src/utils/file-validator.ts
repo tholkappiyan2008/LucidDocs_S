@@ -79,3 +79,4 @@ export function validateFileSignature(
     error: `Invalid file signature for "${fileName}". Only genuine PDF, PNG, and JPEG documents are permitted.`,
   };
 }
+

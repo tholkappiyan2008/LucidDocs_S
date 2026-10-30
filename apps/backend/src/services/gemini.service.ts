@@ -17,6 +17,13 @@ function getGeminiClient(): GoogleGenerativeAI {
   return genAIClient;
 }
 
+const langInstructions: Record<string, string> = {
+  ta: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Tamil (தமிழ்). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  te: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Telugu (తెలుగు). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  hi: 'Provide plain_summary, next_steps, key_fact labels, deadline descriptions, and risk notes in simple, natural, accessible Hindi (हिंदी). Keep dates, numbers, currency values (₹), names, and official codes intact.',
+  en: 'Provide plain_summary and descriptions at an accessible 5th-grade reading level in English.',
+};
+
 export async function analyzeDocumentWithGemini(
   fileBuffer: Buffer,
   mimeType: string,
@@ -29,15 +36,9 @@ export async function analyzeDocumentWithGemini(
     model: 'gemini-1.5-flash',
     generationConfig: {
       responseMimeType: 'application/json',
-      temperature: 0.1, // low temperature for strictly grounded extraction
+      temperature: 0.1,
     },
   });
-
-  const langInstructions: Record<string, string> = {
-    ta: 'Provide plain_summary, next_steps, and risk notes in simple, natural Tamil (தமிழ்). Keep dates, currency values, phone numbers, and official codes intact.',
-    hi: 'Provide plain_summary, next_steps, and risk notes in simple, natural Hindi (हिंदी). Keep dates, currency values, phone numbers, and official codes intact.',
-    en: 'Provide plain_summary at an accessible 5th-grade reading level in English.',
-  };
 
   const selectedLangInstruction = langInstructions[targetLanguage] || langInstructions.en;
 
@@ -74,7 +75,7 @@ CRITICAL ACCESSIBILITY RULES:
 1. Never hallucinate or guess missing values. If an amount or deadline is missing, omit it or state clearly that it is unmentioned.
 2. If text is illegible or torn, add an entry to "needs_human_check".
 3. Plain summary must avoid jargon and translate intimidating legal/medical jargon into everyday concepts.
-4. Return ONLY the valid JSON object.
+4. Return ONLY valid JSON.
 `;
 
   const inlinePart = {
@@ -85,15 +86,10 @@ CRITICAL ACCESSIBILITY RULES:
   };
 
   try {
-    const result = await model.generateContent([
-      systemPrompt,
-      inlinePart,
-    ]);
-
+    const result = await model.generateContent([systemPrompt, inlinePart]);
     const response = await result.response;
     const rawText = response.text().trim();
 
-    // Clean any accidental markdown code fences
     const cleanJson = rawText
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
@@ -101,34 +97,103 @@ CRITICAL ACCESSIBILITY RULES:
       .trim();
 
     const parsedJson = JSON.parse(cleanJson);
-
-    // Validate strictly against ClearDoc Zod schema
     const validatedData = DocumentAnalysisSchema.parse(parsedJson);
     return validatedData;
   } catch (error: any) {
     console.error('[Gemini Service Error]:', error);
+    mapAndThrowGeminiError(error);
+  }
+}
 
-    // Specific error mapping for students and hackathon judges
-    if (error.status === 429 || error.message?.includes('RESOURCE_EXHAUSTED')) {
-      throw new Error(
-        'Gemini API rate limit reached. Please wait a few seconds before submitting another document.'
-      );
-    }
+/**
+ * Translates an existing document analysis into the selected language (Module 5).
+ * Preserves original amounts, dates, and sender names without re-running full OCR.
+ */
+export async function translateAnalysisWithGemini(
+  originalAnalysis: DocumentAnalysis,
+  targetLanguage: string
+): Promise<DocumentAnalysis> {
+  if (targetLanguage === 'en') {
+    return originalAnalysis;
+  }
 
-    if (error.status === 400 || error.message?.includes('API_KEY_INVALID')) {
-      throw new Error(
-        'Gemini API key is invalid. Please verify GEMINI_API_KEY in your backend .env file.'
-      );
-    }
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1,
+    },
+  });
 
-    if (error.name === 'ZodError') {
-      throw new Error(
-        `Gemini returned an unexpected response structure: ${error.message}`
-      );
-    }
+  const selectedLangInstruction = langInstructions[targetLanguage] || langInstructions.en;
 
+  const translationPrompt = `
+You are the Multilingual Translation Engine for ClearDoc, an accessible document understanding tool.
+
+Translate the following document analysis JSON into the target language.
+TARGET LANGUAGE REQUIREMENT:
+${selectedLangInstruction}
+
+PRESERVATION RULES:
+1. Translate "plain_summary", "next_steps", "risks.note", and "deadlines.what".
+2. DO NOT alter numbers, dates (e.g. "2026-11-15"), currency symbols (₹, $, €), bank account numbers, or proper names.
+3. Keep the exact schema intact:
+{
+  "doc_type": "string",
+  "sender": "string",
+  "plain_summary": "string",
+  "key_facts": [{ "label": "string", "value": "string", "confidence": number }],
+  "deadlines": [{ "what": "string", "date": "string" }],
+  "risks": [{ "level": "low" | "medium" | "high" | "critical", "note": "string" }],
+  "next_steps": ["string"],
+  "needs_human_check": ["string"]
+}
+
+SOURCE ANALYSIS:
+${JSON.stringify(originalAnalysis, null, 2)}
+`;
+
+  try {
+    const result = await model.generateContent(translationPrompt);
+    const response = await result.response;
+    const rawText = response.text().trim();
+
+    const cleanJson = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .trim();
+
+    const parsedJson = JSON.parse(cleanJson);
+    const validatedData = DocumentAnalysisSchema.parse(parsedJson);
+    return validatedData;
+  } catch (error: any) {
+    console.error('[Gemini Translation Error]:', error);
+    mapAndThrowGeminiError(error);
+  }
+}
+
+function mapAndThrowGeminiError(error: any): never {
+  if (error.status === 429 || error.message?.includes('RESOURCE_EXHAUSTED')) {
     throw new Error(
-      `Document AI analysis failed: ${error.message || 'Unknown Gemini error'}`
+      'Gemini API rate limit reached. Please wait a few seconds before trying again.'
     );
   }
+
+  if (error.status === 400 || error.message?.includes('API_KEY_INVALID')) {
+    throw new Error(
+      'Gemini API key is invalid. Please verify GEMINI_API_KEY in your backend .env file.'
+    );
+  }
+
+  if (error.name === 'ZodError') {
+    throw new Error(
+      `Gemini returned an unexpected response structure: ${error.message}`
+    );
+  }
+
+  throw new Error(
+    `Document AI processing failed: ${error.message || 'Unknown Gemini error'}`
+  );
 }

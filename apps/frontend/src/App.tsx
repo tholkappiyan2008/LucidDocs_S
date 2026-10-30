@@ -10,6 +10,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UploadPage } from './pages/UploadPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { DocumentDetailPage } from './pages/DocumentDetailPage';
 
 export const App: React.FC = () => {
   return (
@@ -47,6 +48,14 @@ export const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <HistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/documents/:id"
+                  element={
+                    <ProtectedRoute>
+                      <DocumentDetailPage />
                     </ProtectedRoute>
                   }
                 />

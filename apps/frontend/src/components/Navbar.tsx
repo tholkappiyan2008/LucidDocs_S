@@ -94,6 +94,7 @@ export const Navbar: React.FC = () => {
                 >
                   <option value="en">English</option>
                   <option value="ta">தமிழ் (Tamil)</option>
+                  <option value="te">తెలుగు (Telugu)</option>
                   <option value="hi">हिंदी (Hindi)</option>
                 </select>
               </div>

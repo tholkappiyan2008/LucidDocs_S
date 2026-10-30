@@ -6,6 +6,7 @@ import {
   getDocumentsHandler,
   getDocumentByIdHandler,
   deleteDocumentHandler,
+  translateDocumentHandler,
 } from '../controllers/document.controller.js';
 import { validateFileSignature } from '../utils/file-validator.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
@@ -33,6 +34,12 @@ router.get('/', getDocumentsHandler);
  * Retrieve specific document details and analysis
  */
 router.get('/:id', getDocumentByIdHandler);
+
+/**
+ * POST /api/v1/documents/:id/translate
+ * Translate document analysis to Tamil, Telugu, Hindi, or English (Module 5)
+ */
+router.post('/:id/translate', translateDocumentHandler);
 
 /**
  * DELETE /api/v1/documents/:id

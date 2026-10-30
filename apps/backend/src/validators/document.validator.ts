@@ -31,3 +31,4 @@ export type KeyFact = z.infer<typeof KeyFactSchema>;
 export type Deadline = z.infer<typeof DeadlineSchema>;
 export type Risk = z.infer<typeof RiskSchema>;
 export type DocumentAnalysis = z.infer<typeof DocumentAnalysisSchema>;
+
