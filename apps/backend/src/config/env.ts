@@ -1,9 +1,23 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
-// Load .env from workspace root or current directory
-dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
-dotenv.config(); // fallback to local .env if present
+// 1. Try loading root workspace .env
+const rootEnvPath = path.resolve(process.cwd(), '.env');
+const parentEnvPath = path.resolve(process.cwd(), '../../.env');
+const backendEnvPath = path.resolve(process.cwd(), 'apps/backend/.env');
+
+if (fs.existsSync(rootEnvPath)) {
+  dotenv.config({ path: rootEnvPath });
+} else if (fs.existsSync(parentEnvPath)) {
+  dotenv.config({ path: parentEnvPath });
+}
+
+// 2. Try loading local backend .env if present (without overwriting existing)
+if (fs.existsSync(backendEnvPath)) {
+  dotenv.config({ path: backendEnvPath });
+}
+dotenv.config(); // default fallback
 
 export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
@@ -27,4 +41,3 @@ export function validateRequiredEnv() {
     console.warn(`[WARNING] Set these in .env file to enable live Supabase & Gemini integrations.`);
   }
 }
-
