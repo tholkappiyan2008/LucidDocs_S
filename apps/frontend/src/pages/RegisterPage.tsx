@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, AlertCircle, FileText, Lock, Mail, User } from 'lucide-react';
+import { Logo } from '../components/Logo';
+import { UserPlus, AlertCircle, Lock, Mail, User, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,127 +37,211 @@ export const RegisterPage: React.FC = () => {
     } catch (err: any) {
       const serverMessage =
         err.response?.data?.error?.message ||
-        'Unable to complete registration. Please check your details and try again.';
+        (!err.response
+          ? 'Cannot reach ClearDoc server. Please ensure the backend is running.'
+          : 'Unable to complete registration. Please check your details and try again.');
       setError(serverMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const labelClass = 'block text-xs font-bold uppercase tracking-[0.16em] text-deep-teal/70 mb-2';
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <FileText className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
-          <p className="text-slate-600 text-sm mt-1">
-            Join ClearDoc to make everyday documents simple and accessible
-          </p>
+    <div className="grid min-h-[calc(100vh-4.5rem)] lg:grid-cols-12 bg-surface">
+      {/* Statement panel */}
+      <aside className="hidden bg-deep-teal px-10 py-16 text-white lg:col-span-5 lg:flex lg:flex-col lg:justify-between lg:border-r lg:border-white/10 lg:px-12 relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 15% 20%, rgba(15,164,175,0.20), transparent 50%), radial-gradient(circle at 85% 80%, rgba(150,71,52,0.14), transparent 50%)',
+          }}
+        />
+        <div className="relative z-10">
+          <Logo inverted={true} />
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-800 text-sm" role="alert">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        <div className="relative z-10">
+          <p className="text-[clamp(2rem,2.8vw,3.25rem)] font-extrabold leading-[1.08] tracking-tight">
+            Documents Shouldn&apos;t
+            <br />
+            <span className="text-bright-cyan">Be Difficult.</span>
+          </p>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/75">
+            Create an account to analyze utility bills, hospital records, and official notices with
+            clear summaries, risk alerts, and speech synthesis.
+          </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="register-name" className="block text-sm font-semibold text-slate-700 mb-1">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="register-name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jane Doe"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+          <ul className="mt-8 space-y-3 text-xs text-white/70">
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-bright-cyan shrink-0" />
+              <span>PDF, PNG or JPEG document extraction up to 10MB</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-bright-cyan shrink-0" />
+              <span>Strict multi-user ownership isolation</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-bright-cyan shrink-0" />
+              <span>Full control to permanently delete any document</span>
+            </li>
+          </ul>
+        </div>
+
+        <p className="relative z-10 text-xs text-white/50">
+          In-memory processing · Enterprise security standards
+        </p>
+      </aside>
+
+      {/* Form area */}
+      <div className="flex items-center justify-center px-5 py-14 sm:px-8 lg:col-span-7">
+        <div className="w-full max-w-md">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
+            <span>New Account</span>
+          </div>
+
+          <h1 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-deep-teal">
+            Start understanding.
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-deep-teal/70 sm:text-base">
+            Join ClearDoc to make everyday documents accessible and clear.
+          </p>
+
+          {error && (
+            <div
+              className="mt-6 flex items-center gap-3 border-l-4 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-deep-teal rounded-sm"
+              role="alert"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-terracotta" aria-hidden="true" />
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          <div>
-            <label htmlFor="register-email" className="block text-sm font-semibold text-slate-700 mb-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="register-email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <div>
+              <label htmlFor="register-name" className={labelClass}>
+                Full name
+              </label>
+              <div className="relative">
+                <User
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="register-name"
+                  type="text"
+                  required
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your Name"
+                  className="field pl-10"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="register-password" className="block text-sm font-semibold text-slate-700 mb-1">
-              Password (min 8 characters)
-            </label>
-            <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="register-password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+            <div>
+              <label htmlFor="register-email" className={labelClass}>
+                Email address
+              </label>
+              <div className="relative">
+                <Mail
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="register-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="field pl-10"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="register-confirm-password" className="block text-sm font-semibold text-slate-700 mb-1">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="register-confirm-password"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+            <div>
+              <label htmlFor="register-password" className={labelClass}>
+                Password (min. 8 characters)
+              </label>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="register-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="field pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-deep-teal/50 hover:text-deep-teal transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-base mt-2 focus:ring-2 focus:ring-emerald-500"
-          >
-            {submitting ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <UserPlus className="w-5 h-5" />
-                <span>Create Account</span>
-              </>
-            )}
-          </button>
-        </form>
+            <div>
+              <label htmlFor="register-confirm" className={labelClass}>
+                Confirm password
+              </label>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="register-confirm"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="field pl-10 pr-10"
+                />
+              </div>
+            </div>
 
-        <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-          <p className="text-sm text-slate-600">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn btn-primary w-full py-3.5 text-base font-bold shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 mt-2"
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Creating account…</span>
+                </span>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  <span>Create Account</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-8 border-t border-deep-teal/10 pt-6 text-sm text-deep-teal/70">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-emerald-600 hover:text-emerald-700">
+            <Link
+              to="/login"
+              className="font-bold text-deep-teal underline decoration-bright-cyan decoration-2 underline-offset-4 hover:text-bright-cyan transition-colors"
+            >
               Sign in
             </Link>
           </p>
@@ -165,3 +251,4 @@ export const RegisterPage: React.FC = () => {
   );
 };
 
+export default RegisterPage;

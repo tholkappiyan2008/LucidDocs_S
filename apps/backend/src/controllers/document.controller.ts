@@ -2,10 +2,10 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import { validateFileSignature } from '../utils/file-validator.js';
 import {
-  analyzeDocumentWithGemini,
-  translateAnalysisWithGemini,
-  answerDocumentQuestionWithGemini,
-} from '../services/gemini.service.js';
+  analyzeDocumentWithGroq,
+  translateAnalysisWithGroq,
+  answerDocumentQuestionWithGroq,
+} from '../services/groq.service.js';
 import { askQuestionSchema } from '../validators/question.validator.js';
 import { getSupabase } from '../config/supabase.js';
 
@@ -53,8 +53,8 @@ export async function analyzeDocumentHandler(
 
     const targetLanguage = req.body.language || 'en';
 
-    // Run Multimodal AI Analysis with Gemini
-    const analysis = await analyzeDocumentWithGemini(
+    // Run Multimodal AI Analysis with Groq
+    const analysis = await analyzeDocumentWithGroq(
       file.buffer,
       signatureCheck.mimeType!,
       targetLanguage
@@ -297,7 +297,7 @@ export async function translateDocumentHandler(
       return;
     }
 
-    const translatedAnalysis = await translateAnalysisWithGemini(
+    const translatedAnalysis = await translateAnalysisWithGroq(
       doc.analysis,
       targetLanguage
     );
@@ -356,8 +356,8 @@ export async function askDocumentQuestionHandler(
       return;
     }
 
-    // 2. Generate grounded answer with Gemini
-    const qaResult = await answerDocumentQuestionWithGemini(
+    // 2. Generate grounded answer with Groq
+    const qaResult = await answerDocumentQuestionWithGroq(
       doc.analysis,
       validated.question,
       validated.language

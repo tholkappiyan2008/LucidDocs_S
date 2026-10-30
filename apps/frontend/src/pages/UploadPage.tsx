@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useA11y, SupportedLanguage } from '../context/A11yContext';
+import { useA11y } from '../context/A11yContext';
 import { validateDocumentUpload, analyzeDocument } from '../services/document.service';
 import {
   UploadCloud,
@@ -9,14 +9,13 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Languages,
   ShieldCheck,
   Sparkles,
   Check,
 } from 'lucide-react';
 
 export const UploadPage: React.FC = () => {
-  const { language, setLanguage } = useA11y();
+  const { language } = useA11y();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -35,12 +34,16 @@ export const UploadPage: React.FC = () => {
     setUploadSuccess(null);
 
     if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      setError(`Unsupported file type (${file.type || 'unknown'}). Please upload a PDF, PNG, or JPEG file.`);
+      setError(
+        `Unsupported file type (${file.type || 'unknown'}). Please upload a PDF, PNG, or JPEG file.`
+      );
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError(`File is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum allowed size is 10MB.`);
+      setError(
+        `File is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum allowed size is 10MB.`
+      );
       return;
     }
 
@@ -98,7 +101,7 @@ export const UploadPage: React.FC = () => {
     }
   };
 
-  const handleAnalyzeWithGemini = async () => {
+  const handleAnalyze = async () => {
     if (!selectedFile) {
       setError('Please select a document to upload.');
       return;
@@ -109,13 +112,12 @@ export const UploadPage: React.FC = () => {
       setError(null);
       const res = await analyzeDocument(selectedFile, language);
       if (res && res.document) {
-        // Navigate to document details / results
         navigate(`/documents/${res.document.id}`, { state: { document: res.document } });
       }
     } catch (err: any) {
       const msg =
         err.response?.data?.error?.message ||
-        'Document AI analysis failed. Please verify that your GEMINI_API_KEY and SUPABASE credentials are configured in your .env file.';
+        'Document AI analysis failed. Please verify that backend Groq service and Supabase are healthy.';
       setError(msg);
     } finally {
       setAnalyzing(false);
@@ -123,35 +125,41 @@ export const UploadPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Upload & Understand Document
+      <header className="border-b border-deep-teal/10 pb-8">
+        <div className="inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
+          <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
+          <span>New Document Analysis</span>
+        </div>
+        <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal">
+          Upload &amp; understand a document.
         </h1>
-        <p className="mt-2 text-slate-600 text-base sm:text-lg">
-          Upload any medical bill, utility statement, or legal notice. We analyze it securely in memory.
+        <p className="mt-2.5 max-w-2xl text-base leading-relaxed text-deep-teal/70">
+          Medical bills, utility statements, hospital records and legal notices are analyzed in
+          memory and explained in simple, plain language.
         </p>
-      </div>
+      </header>
 
       {/* Error Alert */}
       {error && (
         <div
-          className="mb-6 p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-start gap-3 text-rose-900"
+          className="mt-8 flex items-start gap-3 border-l-4 border-terracotta bg-terracotta/10 px-5 py-4 text-deep-teal rounded-sm"
           role="alert"
           aria-live="assertive"
         >
-          <AlertCircle className="w-6 h-6 flex-shrink-0 text-rose-600 mt-0.5" />
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-terracotta" aria-hidden="true" />
           <div className="flex-1">
-            <h4 className="font-bold text-sm sm:text-base">Upload & Analysis Notice</h4>
-            <p className="text-sm mt-0.5">{error}</p>
+            <h2 className="text-sm font-bold text-deep-teal">Upload notice</h2>
+            <p className="mt-1 text-sm leading-relaxed text-deep-teal/80">{error}</p>
           </div>
           <button
+            type="button"
             onClick={() => setError(null)}
-            className="p-1 hover:bg-rose-100 rounded-lg text-rose-700"
-            aria-label="Dismiss error"
+            className="p-1 text-deep-teal/60 hover:text-deep-teal transition-colors"
+            aria-label="Dismiss notice"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -159,173 +167,171 @@ export const UploadPage: React.FC = () => {
       {/* Success Alert */}
       {uploadSuccess && (
         <div
-          className="mb-6 p-5 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-start gap-3 text-emerald-950"
+          className="mt-8 border-l-4 border-bright-cyan bg-bright-cyan/10 px-5 py-4 text-deep-teal rounded-sm"
           role="status"
           aria-live="polite"
         >
-          <CheckCircle2 className="w-6 h-6 flex-shrink-0 text-emerald-600 mt-0.5" />
-          <div className="flex-1">
-            <h4 className="font-bold text-base">File Upload Pipeline Verified!</h4>
-            <p className="text-sm text-emerald-800 mt-1">
-              File <strong>"{uploadSuccess.file.originalName}"</strong> (
-              {uploadSuccess.file.detectedType.toUpperCase()}, {formatFileSize(uploadSuccess.file.sizeBytes)})
-              passed memory storage and magic-byte signature validation.
-            </p>
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-bright-cyan" aria-hidden="true" />
+            <div>
+              <h2 className="text-sm font-bold text-deep-teal">Upload pipeline verified</h2>
+              <p className="mt-1 text-sm leading-relaxed text-deep-teal/80">
+                File <strong className="font-bold">“{uploadSuccess.file.originalName}”</strong> (
+                {uploadSuccess.file.detectedType.toUpperCase()},{' '}
+                {formatFileSize(uploadSuccess.file.sizeBytes)}) passed in-memory signature and format
+                validation.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Upload Box & Dropzone */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-8">
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              fileInputRef.current?.click();
-            }
-          }}
-          tabIndex={0}
-          role="button"
-          aria-label="Upload document dropzone. Press Enter to select a file."
-          className={`border-3 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/20 ${
-            isDragging
-              ? 'border-emerald-500 bg-emerald-50 scale-[1.01]'
-              : 'border-slate-300 hover:border-emerald-400 bg-slate-50/50 hover:bg-slate-50'
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
-            onChange={handleFileChange}
-            className="hidden"
-            aria-hidden="true"
-          />
+      <div className="mt-8 grid gap-8 lg:grid-cols-12">
+        {/* Dropzone */}
+        <div className="lg:col-span-7">
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Upload document dropzone. Press Enter to select a file."
+            className={`flex h-full min-h-[20rem] flex-col items-center justify-center rounded-sm border-2 border-dashed px-6 py-12 text-center transition-all duration-200 cursor-pointer ${
+              isDragging
+                ? 'border-bright-cyan bg-bright-cyan/5 shadow-md scale-[1.01]'
+                : 'border-deep-teal/20 bg-white hover:border-bright-cyan hover:bg-deep-teal/2 shadow-xs'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+              onChange={handleFileChange}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
 
-          <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <UploadCloud className="w-8 h-8" />
+            <span className="flex h-14 w-14 items-center justify-center rounded-sm bg-deep-teal text-bright-cyan shadow-sm mb-4">
+              <UploadCloud className="h-7 w-7" aria-hidden="true" />
+            </span>
+
+            <h2 className="text-xl font-bold tracking-tight text-deep-teal sm:text-2xl">
+              {selectedFile ? 'Replace selected document' : 'Click to select or drag and drop'}
+            </h2>
+            <p className="mt-2 text-sm text-deep-teal/65">PDF, PNG or JPEG files up to 10MB</p>
+
+            <span className="mt-6 inline-flex border border-deep-teal/20 px-5 py-2.5 text-sm font-bold text-deep-teal rounded-sm bg-surface hover:bg-white hover:border-bright-cyan transition-colors">
+              Browse Files
+            </span>
           </div>
 
-          <h3 className="text-lg sm:text-xl font-bold text-slate-800">
-            {selectedFile ? 'Replace selected document' : 'Click to select or drag and drop document'}
-          </h3>
-          <p className="text-slate-500 text-sm mt-1">
-            PDF, PNG, or JPEG files up to 10MB
-          </p>
+          {/* Selected File Details */}
+          {selectedFile && (
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-sm border border-deep-teal/15 bg-white p-4 shadow-xs animate-rise">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-deep-teal/5 text-deep-teal">
+                  {selectedFile.type === 'application/pdf' ? (
+                    <FileText className="h-5 w-5 text-deep-teal" aria-hidden="true" />
+                  ) : (
+                    <Image className="h-5 w-5 text-bright-cyan" aria-hidden="true" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-deep-teal">{selectedFile.name}</p>
+                  <p className="truncate text-xs text-deep-teal/60">
+                    {formatFileSize(selectedFile.size)} · {selectedFile.type || 'Document'}
+                  </p>
+                </div>
+              </div>
 
-          <span className="inline-block mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow hover:bg-emerald-700 transition-colors">
-            Browse Files
-          </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedFile(null);
+                  setUploadSuccess(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="p-2 text-deep-teal/50 hover:text-terracotta hover:bg-terracotta/10 rounded-sm transition-colors cursor-pointer"
+                title="Remove file"
+                aria-label="Remove selected file"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Selected File Card */}
-        {selectedFile && (
-          <div className="mt-6 p-4 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-700 shadow-sm flex-shrink-0">
-                {selectedFile.type === 'application/pdf' ? (
-                  <FileText className="w-5 h-5 text-rose-600" />
-                ) : (
-                  <Image className="w-5 h-5 text-blue-600" />
-                )}
-              </div>
-              <div className="truncate">
-                <p className="text-sm font-bold text-slate-900 truncate">{selectedFile.name}</p>
-                <p className="text-xs text-slate-500">
-                  {formatFileSize(selectedFile.size)} • {selectedFile.type || 'Document'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedFile(null);
-                setUploadSuccess(null);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-              }}
-              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-colors ml-2"
-              title="Remove file"
-              aria-label="Remove selected file"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Language Selection Row */}
-        <div className="mt-6 pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Languages className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+        {/* Options & Actions */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="panel p-6 space-y-6">
             <div>
-              <label htmlFor="upload-language" className="text-sm font-bold text-slate-800">
-                Explanation Language
-              </label>
-              <p className="text-xs text-slate-500">Choose your preferred language for summaries</p>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-deep-teal">
+                Analysis Options
+              </h2>
+              <p className="mt-1 text-xs text-deep-teal/65 leading-relaxed">
+                Documents are processed through multimodal AI to extract key facts, verified
+                amounts, critical deadlines, and risk factors.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={!selectedFile || analyzing || validating}
+                className="btn btn-primary w-full py-4 text-base font-bold shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {analyzing ? (
+                  <span className="flex items-center gap-2" role="status">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Analyzing document…</span>
+                  </span>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 text-bright-cyan" aria-hidden="true" />
+                    <span>Analyze Document</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleValidateOnly}
+                disabled={!selectedFile || analyzing || validating}
+                className="btn btn-quiet w-full py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {validating ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-deep-teal border-t-transparent" />
+                ) : (
+                  <Check className="h-4 w-4" aria-hidden="true" />
+                )}
+                <span>Verify file upload only</span>
+              </button>
             </div>
           </div>
 
-          <select
-            id="upload-language"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
-            <option value="en">English (Simplified)</option>
-            <option value="ta">தமிழ் (Tamil)</option>
-            <option value="te">తెలుగు (Telugu)</option>
-            <option value="hi">हिंदी (Hindi)</option>
-          </select>
+          {/* Privacy Note */}
+          <div className="flex items-start gap-3 rounded-sm border-l-4 border-ocean-teal bg-ocean-teal/5 p-4 text-deep-teal">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-ocean-teal" aria-hidden="true" />
+            <p className="text-xs leading-relaxed text-deep-teal/75">
+              <strong className="font-bold text-deep-teal">In-memory privacy:</strong> Your document
+              is processed directly in a volatile memory buffer and never stored as raw bytes on
+              disk. Analysis records are owned strictly by your account.
+            </p>
+          </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
-          <button
-            type="button"
-            onClick={handleAnalyzeWithGemini}
-            disabled={!selectedFile || analyzing || validating}
-            className="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-lg focus:ring-4 focus:ring-emerald-500/20"
-          >
-            {analyzing ? (
-              <div className="flex items-center gap-2" role="status">
-                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Analyzing with Gemini AI...</span>
-              </div>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 text-yellow-300" />
-                <span>Analyze with Gemini AI</span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleValidateOnly}
-            disabled={!selectedFile || analyzing || validating}
-            className="sm:w-auto py-4 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl border border-slate-300 transition-all flex items-center justify-center gap-2 text-sm focus:ring-2 focus:ring-slate-400"
-          >
-            {validating ? (
-              <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <Check className="w-4 h-4" />
-            )}
-            <span>Verify Upload Only</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Security Guarantee Box */}
-      <div className="flex items-center gap-3 p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl text-emerald-900 text-sm">
-        <ShieldCheck className="w-6 h-6 text-emerald-600 flex-shrink-0" />
-        <span>
-          <strong>Zero Disk Retention:</strong> Your document is held strictly in volatile RAM buffer during validation and is never saved to unencrypted local storage.
-        </span>
       </div>
     </div>
   );
 };
+
+export default UploadPage;

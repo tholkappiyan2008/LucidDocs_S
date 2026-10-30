@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, AlertCircle, FileText, Lock, Mail } from 'lucide-react';
+import { Logo } from '../components/Logo';
+import { LogIn, AlertCircle, Lock, Mail, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,100 +34,168 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       const serverMessage =
         err.response?.data?.error?.message ||
-        'Unable to log in. Please check your credentials and try again.';
+        (!err.response
+          ? 'Cannot reach ClearDoc server. Please ensure the backend is running.'
+          : 'Unable to log in. Please check your credentials and try again.');
       setError(serverMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const labelClass = 'block text-xs font-bold uppercase tracking-[0.16em] text-deep-teal/70 mb-2';
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <FileText className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome to ClearDoc</h1>
-          <p className="text-slate-600 text-sm mt-1">
-            Sign in to access your documents and personalized explanations
-          </p>
+    <div className="grid min-h-[calc(100vh-4.5rem)] lg:grid-cols-12 bg-surface">
+      {/* Statement panel */}
+      <aside className="hidden bg-deep-teal px-10 py-16 text-white lg:col-span-5 lg:flex lg:flex-col lg:justify-between lg:border-r lg:border-white/10 lg:px-12 relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 10% 15%, rgba(15,164,175,0.18), transparent 50%), radial-gradient(circle at 90% 85%, rgba(150,71,52,0.12), transparent 50%)',
+          }}
+        />
+        <div className="relative z-10">
+          <Logo inverted={true} />
         </div>
 
-        {isExpired && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-amber-800 text-sm" role="alert">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>Your session has expired. Please sign in again.</span>
-          </div>
-        )}
+        <div className="relative z-10">
+          <p className="text-[clamp(2rem,2.8vw,3.25rem)] font-extrabold leading-[1.08] tracking-tight">
+            Complex documents.
+            <br />
+            <span className="text-bright-cyan">Clear understanding.</span>
+          </p>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/75">
+            Sign in to access your plain-language summaries, verified deadlines, action steps and
+            audio read-aloud narration.
+          </p>
 
-        {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-800 text-sm" role="alert">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mt-8 flex items-center gap-2.5 text-xs text-white/70">
+            <ShieldCheck className="h-4 w-4 text-bright-cyan shrink-0" />
+            <span>100% In-memory privacy — isolated to your account</span>
           </div>
-        )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="login-email" className="block text-sm font-semibold text-slate-700 mb-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="login-email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+        <p className="relative z-10 text-xs text-white/50">
+          ClearDoc Accessible AI Workspace · Version 1
+        </p>
+      </aside>
+
+      {/* Form area */}
+      <div className="flex items-center justify-center px-5 py-14 sm:px-8 lg:col-span-7">
+        <div className="w-full max-w-md">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
+            <span>Account Access</span>
+          </div>
+
+          <h1 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-deep-teal">
+            Welcome back.
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-deep-teal/70 sm:text-base">
+            Access your document workspace and personalized analyses.
+          </p>
+
+          {isExpired && (
+            <div
+              className="mt-6 flex items-center gap-3 border-l-4 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-deep-teal rounded-sm"
+              role="alert"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-terracotta" aria-hidden="true" />
+              <span>Your session has expired. Please sign in again.</span>
             </div>
-          </div>
+          )}
 
-          <div>
-            <label htmlFor="login-password" className="block text-sm font-semibold text-slate-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="login-password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
-              />
+          {error && (
+            <div
+              className="mt-6 flex items-center gap-3 border-l-4 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-deep-teal rounded-sm"
+              role="alert"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-terracotta" aria-hidden="true" />
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-base mt-2 focus:ring-2 focus:ring-emerald-500"
-          >
-            {submitting ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <LogIn className="w-5 h-5" />
-                <span>Sign In</span>
-              </>
-            )}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <div>
+              <label htmlFor="login-email" className={labelClass}>
+                Email address
+              </label>
+              <div className="relative">
+                <Mail
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="login-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="field pl-10"
+                />
+              </div>
+            </div>
 
-        <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-          <p className="text-sm text-slate-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-emerald-600 hover:text-emerald-700">
-              Create an account
+            <div>
+              <label htmlFor="login-password" className={labelClass}>
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-deep-teal/40"
+                  aria-hidden="true"
+                />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="field pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-deep-teal/50 hover:text-deep-teal transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn btn-primary w-full py-3.5 text-base font-bold shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Signing in…</span>
+                </span>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  <span>Sign in</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-8 border-t border-deep-teal/10 pt-6 text-sm text-deep-teal/70">
+            Don&apos;t have an account?{' '}
+            <Link
+              to="/register"
+              className="font-bold text-deep-teal underline decoration-bright-cyan decoration-2 underline-offset-4 hover:text-bright-cyan transition-colors"
+            >
+              Create one
             </Link>
           </p>
         </div>
@@ -134,3 +204,4 @@ export const LoginPage: React.FC = () => {
   );
 };
 
+export default LoginPage;

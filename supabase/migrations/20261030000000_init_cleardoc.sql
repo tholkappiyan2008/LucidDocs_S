@@ -61,3 +61,9 @@ CREATE TABLE IF NOT EXISTS document_actions (
 -- Index for document action history
 CREATE INDEX IF NOT EXISTS idx_actions_document_id ON document_actions(document_id);
 
+-- 5. Grant Permissions to service_role, postgres, authenticated, and anon
+GRANT ALL ON TABLE users TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE documents TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE document_questions TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE document_actions TO postgres, service_role, authenticated, anon;
+

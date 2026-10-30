@@ -14,6 +14,13 @@ export function getSupabase(): SupabaseClient {
     );
   }
 
+  const url = config.supabaseUrl;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    throw new Error(
+      `Invalid SUPABASE_URL: "${url}". Must be a valid HTTP or HTTPS URL (e.g., https://your-project.supabase.co). Please check your .env file.`
+    );
+  }
+
   supabaseClient = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
     auth: {
       persistSession: false,
@@ -25,6 +32,7 @@ export function getSupabase(): SupabaseClient {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(config.supabaseUrl && config.supabaseServiceRoleKey);
+  const url = config.supabaseUrl;
+  const hasValidUrl = url.startsWith('http://') || url.startsWith('https://');
+  return Boolean(hasValidUrl && config.supabaseServiceRoleKey);
 }
-

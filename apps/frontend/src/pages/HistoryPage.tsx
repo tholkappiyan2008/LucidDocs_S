@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getDocuments, deleteDocument, DocumentListItem, PaginationMeta } from '../services/document.service';
 import {
-  Clock,
+  getDocuments,
+  deleteDocument,
+  DocumentListItem,
+  PaginationMeta,
+} from '../services/document.service';
+import {
   FileText,
-  Building,
   Trash2,
-  ExternalLink,
+  ArrowUpRight,
   UploadCloud,
   AlertCircle,
   CheckCircle2,
@@ -14,6 +17,8 @@ import {
   ChevronRight,
   X,
   AlertTriangle,
+  Clock,
+  Building,
 } from 'lucide-react';
 
 export const HistoryPage: React.FC = () => {
@@ -62,14 +67,13 @@ export const HistoryPage: React.FC = () => {
       setDeleting(true);
       await deleteDocument(docToDelete.id);
 
-      // Remove item locally without needing full reload
       setDocuments((prev) => prev.filter((d) => d.id !== docToDelete.id));
       setPagination((prev) => ({
         ...prev,
         total: Math.max(0, prev.total - 1),
       }));
 
-      setFeedback(`Document "${docToDelete.file_name}" was deleted successfully.`);
+      setFeedback(`Document “${docToDelete.file_name}” was permanently deleted.`);
       setDocToDelete(null);
     } catch (err: any) {
       const msg =
@@ -81,152 +85,164 @@ export const HistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <header className="flex flex-col gap-6 border-b border-deep-teal/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-            <Clock className="w-8 h-8 text-emerald-600" />
-            <span>Document History</span>
+          <div className="inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
+            <span>Document Archive</span>
+          </div>
+          <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal">
+            Document History
           </h1>
-          <p className="mt-1 text-slate-600 text-sm sm:text-base">
-            Review past document analyses, deadlines, and translations
+          <p className="mt-2.5 max-w-xl text-base leading-relaxed text-deep-teal/70">
+            Every analysis you have run — reopen it to re-read, listen, or ask follow-up questions.
           </p>
         </div>
 
-        <Link
-          to="/upload"
-          className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow transition-colors"
-        >
-          <UploadCloud className="w-4 h-4" />
-          <span>Upload New Document</span>
+        <Link to="/upload" className="btn btn-primary px-6 py-3.5 font-bold shadow-xs shrink-0">
+          <UploadCloud className="h-4 w-4" aria-hidden="true" />
+          <span>Upload Document</span>
         </Link>
-      </div>
+      </header>
 
-      {/* Success Notification */}
+      {/* Feedback Message */}
       {feedback && (
         <div
-          className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-emerald-950 text-sm"
+          className="mt-8 flex items-center justify-between gap-4 rounded-sm border-l-4 border-ocean-teal bg-ocean-teal/10 px-5 py-4 text-sm text-deep-teal"
           role="status"
           aria-live="polite"
         >
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <span className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-ocean-teal" aria-hidden="true" />
             <span>{feedback}</span>
-          </div>
+          </span>
           <button
+            type="button"
             onClick={() => setFeedback(null)}
-            className="p-1 text-emerald-700 hover:bg-emerald-100 rounded-lg"
+            className="p-1 text-deep-teal/50 hover:text-deep-teal transition-colors"
             aria-label="Dismiss feedback"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
 
-      {/* Error Alert */}
+      {/* Error Message */}
       {error && (
         <div
-          className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-rose-950 text-sm"
+          className="mt-8 flex items-center justify-between gap-4 rounded-sm border-l-4 border-terracotta bg-terracotta/10 px-5 py-4 text-sm text-deep-teal"
           role="alert"
         >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+          <span className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 shrink-0 text-terracotta" aria-hidden="true" />
             <span>{error}</span>
-          </div>
+          </span>
           <button
+            type="button"
             onClick={() => setError(null)}
-            className="p-1 text-rose-700 hover:bg-rose-100 rounded-lg"
+            className="p-1 text-deep-teal/50 hover:text-deep-teal transition-colors"
             aria-label="Dismiss error"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading Skeleton */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center" role="status">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-600 font-medium">Loading your document history...</p>
+        <div className="py-16 text-center" role="status">
+          <span className="sr-only">Loading your document history</span>
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-3 border-deep-teal border-t-transparent" />
+          <p className="mt-4 text-sm font-semibold text-deep-teal/70">
+            Loading document archive…
+          </p>
         </div>
       ) : documents.length === 0 ? (
         /* Empty State */
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 sm:p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <FileText className="w-8 h-8" />
-          </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">No documents analyzed yet</h3>
-          <p className="text-slate-600 max-w-md mx-auto text-sm sm:text-base mb-6">
-            Upload your medical bills, utility statements, or official notices to get plain-language summaries and audio read-aloud.
+        <div className="mt-10 rounded-sm border border-dashed border-deep-teal/20 bg-white px-6 py-16 text-center shadow-xs">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-deep-teal/5 text-deep-teal">
+            <FileText className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-deep-teal">
+            No documents analyzed yet
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-deep-teal/70">
+            Upload an electricity bill, hospital discharge summary, or official notice to get a
+            plain-language breakdown, key dates and read-aloud narration.
           </p>
-          <Link
-            to="/upload"
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl shadow transition-all"
-          >
-            <UploadCloud className="w-5 h-5" />
-            <span>Upload Your First Document</span>
+          <Link to="/upload" className="btn btn-primary mt-8 px-6 py-3.5 font-bold shadow-xs">
+            <UploadCloud className="h-4 w-4" aria-hidden="true" />
+            <span>Upload your first document</span>
           </Link>
         </div>
       ) : (
         /* Document Cards List */
-        <div className="space-y-4">
-          {documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="bg-white rounded-2xl border border-slate-200 hover:border-emerald-300 p-5 sm:p-6 shadow-sm hover:shadow transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">
-                    {doc.doc_type}
-                  </span>
-                  <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                    <Building className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate max-w-[200px]">{doc.sender}</span>
-                  </span>
-                  <span className="text-xs text-slate-400 ml-auto md:ml-0">
-                    {new Date(doc.created_at).toLocaleDateString()}
-                  </span>
+        <div className="mt-8 space-y-4">
+          <div className="divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs">
+            {documents.map((doc) => (
+              <div
+                key={doc.id}
+                className="group p-5 sm:p-6 transition-colors hover:bg-deep-teal/2"
+              >
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-center sm:gap-6">
+                  {/* Metadata */}
+                  <div className="sm:col-span-3 space-y-1">
+                    <span className="inline-block rounded-xs bg-ocean-teal/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-ocean-teal">
+                      {doc.doc_type || 'Document'}
+                    </span>
+                    <p className="flex items-center gap-1.5 text-xs text-deep-teal/70">
+                      <Building className="h-3 w-3 text-deep-teal/40" />
+                      <span className="truncate">{doc.sender || 'Unknown Sender'}</span>
+                    </p>
+                    <p className="flex items-center gap-1.5 text-xs text-deep-teal/50">
+                      <Clock className="h-3 w-3 text-deep-teal/40" />
+                      <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                    </p>
+                  </div>
+
+                  {/* Document Title & Summary */}
+                  <div className="sm:col-span-6 min-w-0">
+                    <h2 className="truncate text-base sm:text-lg font-bold tracking-tight text-deep-teal">
+                      {doc.file_name}
+                    </h2>
+                    <p className="mt-1 line-clamp-2 text-xs sm:text-sm leading-relaxed text-deep-teal/70">
+                      {doc.plain_summary || 'Analysis ready to view.'}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 sm:col-span-3 sm:justify-end">
+                    <Link
+                      to={`/documents/${doc.id}`}
+                      className="btn btn-primary px-4 py-2 text-xs font-bold shadow-xs flex-1 sm:flex-none justify-center"
+                      aria-label={`Open ${doc.file_name}`}
+                    >
+                      <span>Open</span>
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => setDocToDelete(doc)}
+                      className="p-2 rounded-sm text-deep-teal/40 hover:text-terracotta hover:bg-terracotta/10 transition-colors cursor-pointer"
+                      title="Delete document permanently"
+                      aria-label={`Delete document ${doc.file_name}`}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
-
-                <h3 className="text-lg font-bold text-slate-900 truncate mb-1">
-                  {doc.file_name}
-                </h3>
-
-                <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                  {doc.plain_summary}
-                </p>
               </div>
+            ))}
+          </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                <Link
-                  to={`/documents/${doc.id}`}
-                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-sm rounded-xl transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>View</span>
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => setDocToDelete(doc)}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors focus:ring-2 focus:ring-rose-500"
-                  title="Delete document"
-                  aria-label={`Delete document ${doc.file_name}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {/* Pagination Controls */}
+          {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-              <span className="text-xs sm:text-sm text-slate-500 font-medium">
-                Page {pagination.page} of {pagination.totalPages} ({pagination.total} documents)
+            <div className="flex items-center justify-between gap-4 border-t border-deep-teal/10 pt-6">
+              <span className="text-xs font-semibold text-deep-teal/65">
+                Page {pagination.page} of {pagination.totalPages} · {pagination.total} total documents
               </span>
 
               <div className="flex items-center gap-2">
@@ -234,20 +250,20 @@ export const HistoryPage: React.FC = () => {
                   type="button"
                   onClick={() => fetchHistory(pagination.page - 1)}
                   disabled={pagination.page <= 1}
-                  className="p-2 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-40 text-slate-700 rounded-xl transition-colors"
+                  className="rounded-sm border border-deep-teal/15 bg-white p-2 text-deep-teal hover:border-bright-cyan disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Previous page"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => fetchHistory(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages}
-                  className="p-2 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-40 text-slate-700 rounded-xl transition-colors"
+                  className="rounded-sm border border-deep-teal/15 bg-white p-2 text-deep-teal hover:border-bright-cyan disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Next page"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -258,46 +274,47 @@ export const HistoryPage: React.FC = () => {
       {/* Delete Confirmation Modal Dialog */}
       {docToDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-deep-teal/60 backdrop-blur-xs p-4 animate-rise"
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
         >
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6" />
+          <div className="w-full max-w-md rounded-sm border border-deep-teal/15 bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta/10 text-terracotta">
+                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h3 id="delete-dialog-title" className="text-lg font-bold text-deep-teal">
+                  Permanently delete document?
+                </h3>
+                <p className="text-xs text-deep-teal/65">This action cannot be undone.</p>
+              </div>
             </div>
 
-            <h3 id="delete-dialog-title" className="text-xl font-bold text-slate-900">
-              Delete Document Record?
-            </h3>
-
-            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-              Are you sure you want to delete <strong>"{docToDelete.file_name}"</strong>? This will remove all associated AI summaries, translations, and questions permanently.
+            <p className="text-sm leading-relaxed text-deep-teal/80">
+              Are you sure you want to delete{' '}
+              <strong className="font-bold text-deep-teal">“{docToDelete.file_name}”</strong>? The
+              plain-language summary, key facts, deadlines, and follow-up Q&A records will be
+              permanently purged from your account.
             </p>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-deep-teal/10">
               <button
                 type="button"
                 onClick={() => setDocToDelete(null)}
                 disabled={deleting}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                className="btn btn-quiet py-2.5 px-4 text-xs font-semibold"
               >
                 Cancel
               </button>
-
               <button
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white shadow-sm transition-colors flex items-center gap-2"
+                className="btn btn-danger py-2.5 px-5 text-xs font-bold shadow-xs"
               >
-                {deleting ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-                <span>Delete Record</span>
+                {deleting ? 'Deleting…' : 'Delete Permanently'}
               </button>
             </div>
           </div>
@@ -306,3 +323,5 @@ export const HistoryPage: React.FC = () => {
     </div>
   );
 };
+
+export default HistoryPage;

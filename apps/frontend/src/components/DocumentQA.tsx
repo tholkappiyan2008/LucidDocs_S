@@ -7,15 +7,13 @@ import {
 import { SupportedLanguage } from '../context/A11yContext';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import {
-  MessageSquare,
   Send,
   CheckCircle2,
   AlertCircle,
   HelpCircle,
   Volume2,
-  RefreshCw,
   User,
-  Bot,
+  Sparkles,
 } from 'lucide-react';
 
 interface DocumentQAProps {
@@ -33,30 +31,13 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
   const { play } = useSpeechSynthesis(language);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Suggested questions tailored by language
-  const suggestedQuestions: Record<string, string[]> = {
-    en: [
-      'What is the total amount I need to pay?',
-      'When is the deadline?',
-      'What happens if I miss this deadline?',
-      'Why did I receive this notice?',
-    ],
-    ta: [
-      'நான் செலுத்த வேண்டிய மொத்த தொகை எவ்வளவு?',
-      'கடைசி நாள் எப்போது?',
-      'கட்டணத்தை தாமதப்படுத்தினால் என்ன நடக்கும்?',
-    ],
-    te: [
-      'నేను చెల్లించాల్సిన మొత్తం ఎంత?',
-      'చివరి తేదీ ఎప్పుడు?',
-      'గడువు తప్పితే ఏమవుతుంది?',
-    ],
-    hi: [
-      'मुझे कुल कितनी राशि का भुगतान करना है?',
-      'अंतिम तिथि क्या है?',
-      'यदि मैं समय पर भुगतान न करूं तो क्या होगा?',
-    ],
-  };
+  const suggestedQuestions = [
+    'What is the total amount I need to pay?',
+    'When is the deadline?',
+    'What happens if I miss this deadline?',
+    'Why did I receive this document?',
+    'Are there any penalties or late fees?',
+  ];
 
   useEffect(() => {
     async function loadHistory() {
@@ -80,7 +61,6 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
   }, [documentId]);
 
   useEffect(() => {
-    // Scroll to bottom when questions change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [questions, asking]);
 
@@ -115,39 +95,36 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 mt-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pb-4 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-            <MessageSquare className="w-5 h-5" />
+    <section className="mt-12 rounded-sm border border-deep-teal/15 bg-white p-6 sm:p-8 shadow-xs">
+      {/* Section Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-deep-teal/10 pb-5">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-bright-cyan mb-1">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Grounded Document Intelligence</span>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">Ask Questions About This Document</h2>
-            <p className="text-xs text-slate-500">
-              Answers are strictly grounded in your document without hallucinating missing facts
-            </p>
-          </div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-deep-teal">
+            Ask Questions About This Document
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-deep-teal/70">
+            Answers are strictly grounded in your verified document content without hallucination.
+          </p>
         </div>
-
-        <span className="text-xs font-semibold px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-full w-fit">
-          AI Document Grounded
-        </span>
       </div>
 
-      {/* Suggested Quick Question Pills */}
-      <div className="mb-6">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-          Suggested Questions:
-        </span>
+      {/* Suggested Questions */}
+      <div className="mt-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-deep-teal/60 mb-2.5">
+          Common Questions
+        </p>
         <div className="flex flex-wrap gap-2">
-          {(suggestedQuestions[language] || suggestedQuestions.en).map((sq, idx) => (
+          {suggestedQuestions.map((sq) => (
             <button
-              key={idx}
+              key={sq}
               type="button"
               onClick={() => handleAsk(sq)}
               disabled={asking}
-              className="text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 transition-colors text-left"
+              className="rounded-sm border border-deep-teal/15 bg-surface px-3 py-1.5 text-xs font-medium text-deep-teal hover:border-bright-cyan hover:bg-bright-cyan/10 transition-colors disabled:opacity-50 cursor-pointer text-left"
             >
               {sq}
             </button>
@@ -155,87 +132,74 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
         </div>
       </div>
 
-      {/* Conversation Thread Box */}
-      <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 sm:p-6 mb-6 max-h-[480px] overflow-y-auto space-y-4">
-        {loadingHistory ? (
-          <div className="py-8 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
-            <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading question history...</span>
+      {/* Conversation Thread */}
+      <div className="mt-8 space-y-4 max-h-[32rem] overflow-y-auto pr-1">
+        {loadingHistory && (
+          <div className="py-6 text-center text-xs text-deep-teal/60 animate-pulse">
+            Loading previous questions…
           </div>
-        ) : questions.length === 0 && !asking ? (
-          <div className="py-12 text-center text-slate-400">
-            <HelpCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm font-medium">No questions asked yet.</p>
-            <p className="text-xs mt-1">Ask anything about amounts, due dates, or confusing terms.</p>
-          </div>
-        ) : (
-          questions.map((item) => (
-            <div key={item.id} className="space-y-3">
-              {/* User Question */}
-              <div className="flex justify-end">
-                <div className="flex items-start gap-2 max-w-[85%] sm:max-w-[75%]">
-                  <div className="bg-emerald-600 text-white rounded-2xl rounded-tr-none p-3.5 shadow-sm text-sm sm:text-base font-medium">
-                    {item.question}
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0 mt-1">
-                    <User className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-              {/* ClearDoc AI Answer */}
-              <div className="flex justify-start">
-                <div className="flex items-start gap-2.5 max-w-[90%] sm:max-w-[80%]">
-                  <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-1">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                  <div className="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm border border-slate-200 text-slate-800 text-sm sm:text-base leading-relaxed">
-                    <p className="whitespace-pre-line">{item.answer}</p>
-
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                      {/* Grounding badge */}
-                      {item.is_grounded ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Grounded in Document</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Not Found in Document</span>
-                        </span>
-                      )}
-
-                      {/* Read aloud answer button */}
-                      <button
-                        type="button"
-                        onClick={() => play(item.answer, language)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors p-1"
-                        title="Read answer aloud"
-                        aria-label="Read answer aloud"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        <span>Listen</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
         )}
 
-        {/* Asking Spinner Bubble */}
+        {!loadingHistory && questions.length === 0 && !asking && (
+          <div className="py-8 text-center rounded-sm bg-surface/60 border border-dashed border-deep-teal/15 p-6">
+            <HelpCircle className="mx-auto h-8 w-8 text-deep-teal/40 mb-2" />
+            <p className="text-sm font-semibold text-deep-teal">No questions asked yet.</p>
+            <p className="mt-0.5 text-xs text-deep-teal/60">
+              Type a question below or click any of the suggested prompts above.
+            </p>
+          </div>
+        )}
+
+        {questions.map((item) => (
+          <div key={item.id} className="space-y-3 pt-2">
+            {/* User Question */}
+            <div className="flex justify-end">
+              <div className="flex max-w-[85%] items-start gap-2.5 rounded-sm bg-deep-teal px-4 py-3 text-white shadow-xs">
+                <p className="text-sm leading-relaxed">{item.question}</p>
+                <User className="h-4 w-4 shrink-0 mt-0.5 text-bright-cyan" />
+              </div>
+            </div>
+
+            {/* AI Answer */}
+            <div className="flex justify-start">
+              <div className="max-w-[88%] rounded-sm border border-deep-teal/15 bg-surface p-4 sm:p-5 shadow-xs">
+                <div className="mb-2 flex items-center justify-between gap-3 border-b border-deep-teal/10 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-bright-cyan" />
+                    <span className="text-xs font-bold text-deep-teal">ClearDoc Answer</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-xs bg-ocean-teal/10 px-2 py-0.5 text-[0.65rem] font-bold text-ocean-teal">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Grounded
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => play(item.answer, language)}
+                      title="Read answer aloud"
+                      aria-label="Read answer aloud"
+                      className="p-1 rounded-xs text-deep-teal/60 hover:text-bright-cyan hover:bg-bright-cyan/10 transition-colors cursor-pointer"
+                    >
+                      <Volume2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-sm leading-relaxed text-deep-teal/90 whitespace-pre-wrap">
+                  {item.answer}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
         {asking && (
-          <div className="flex justify-start">
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-1 animate-pulse">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div className="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm border border-slate-200 text-sm text-slate-600 flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                <span>ClearDoc is reviewing your document to answer...</span>
-              </div>
+          <div className="flex justify-start pt-2">
+            <div className="rounded-sm border border-deep-teal/15 bg-surface px-4 py-3 text-sm text-deep-teal shadow-xs flex items-center gap-2.5">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-deep-teal border-t-transparent" />
+              <span>Analyzing document and generating answer…</span>
             </div>
           </div>
         )}
@@ -243,54 +207,39 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Error Notice */}
       {error && (
-        <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm flex items-center justify-between" role="alert">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleAsk()}
-            className="inline-flex items-center gap-1 font-bold text-rose-900 underline ml-2"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Retry</span>
-          </button>
+        <div
+          className="mt-4 flex items-center gap-2.5 rounded-sm border-l-4 border-terracotta bg-terracotta/10 px-4 py-3 text-xs text-deep-teal"
+          role="alert"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0 text-terracotta" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Question Input Form */}
-      <div className="relative flex items-center">
+      {/* Input Field */}
+      <div className="mt-6 flex items-center gap-2">
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a question about this document (e.g., 'What happens if I miss the due date?')..."
+          placeholder="Ask a question about this document (e.g., When is the due date?)"
           disabled={asking}
-          maxLength={1000}
-          className="w-full pl-4 pr-24 py-3.5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 text-sm sm:text-base bg-white shadow-inner"
-          aria-label="Ask a question about this document"
+          className="field flex-1"
         />
-
         <button
           type="button"
           onClick={() => handleAsk()}
           disabled={!inputText.trim() || asking}
-          className="absolute right-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold text-sm rounded-xl transition-all flex items-center gap-1.5 shadow"
-          aria-label="Submit question"
+          className="btn btn-primary px-5 py-3 shadow-xs shrink-0 font-bold disabled:opacity-50"
         >
-          <span>Ask</span>
-          <Send className="w-3.5 h-3.5" />
+          <Send className="h-4 w-4" />
+          <span className="hidden sm:inline">Ask</span>
         </button>
       </div>
-
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-400 px-1">
-        <span>Press Enter to send</span>
-        <span>{inputText.length} / 1000</span>
-      </div>
-    </div>
+    </section>
   );
 };
+
+export default DocumentQA;

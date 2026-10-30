@@ -1,153 +1,293 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useA11y } from '../context/A11yContext';
+import { getDocuments, DocumentListItem } from '../services/document.service';
 import {
+  ArrowRight,
   UploadCloud,
-  Clock,
-  Volume2,
   Eye,
   Type,
-  FileCheck2,
-  ArrowRight,
+  Volume2,
+  FileText,
+  ShieldCheck,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
+import { Reveal } from '../components/Reveal';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { language } = useA11y();
+  const { highContrast, toggleHighContrast, largeText, toggleLargeText } = useA11y();
 
-  const greetings: Record<string, string> = {
-    en: 'Welcome back',
-    ta: 'வணக்கம் (Vanakkam)',
-    hi: 'नमस्ते (Namaste)',
-  };
+  const [recent, setRecent] = useState<DocumentListItem[]>([]);
+  const [recentState, setRecentState] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecent() {
+      try {
+        setRecentState('loading');
+        const res = await getDocuments(1, 5);
+        if (cancelled) return;
+        setRecent(res.documents ?? []);
+        setRecentState('ready');
+      } catch {
+        if (!cancelled) setRecentState('error');
+      }
+    }
+
+    loadRecent();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sectionHeading = 'text-[0.6875rem] font-bold uppercase tracking-[0.22em] text-deep-teal/60';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 sm:p-10 text-white shadow-xl mb-10">
-        <div className="max-w-3xl">
-          <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/30 text-emerald-100 text-xs sm:text-sm font-semibold tracking-wide uppercase mb-3">
-            ClearDoc Accessibility Hub
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            {greetings[language] || greetings.en}, {user?.name}!
-          </h1>
-          <p className="mt-3 text-emerald-100 text-base sm:text-lg leading-relaxed">
-            What document would you like to understand today? Upload an image or PDF to get an instant, plain-language breakdown.
-          </p>
+    <div className="shell py-10 sm:py-14 lg:py-16">
+      {/* Workspace Header */}
+      <Reveal>
+        <div className="flex flex-col gap-6 border-b border-deep-teal/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
+              <span>Workspace</span>
+            </div>
+            <h1 className="mt-4 text-[clamp(2rem,3.5vw,3rem)] font-extrabold leading-[1.05] tracking-tight text-deep-teal">
+              Welcome back, {user?.name?.split(' ')[0]}.
+            </h1>
+            <p className="mt-2 max-w-xl text-base leading-relaxed text-deep-teal/70">
+              What would you like to understand today? Upload an image or PDF for an instant,
+              plain-language breakdown.
+            </p>
+          </div>
 
-          <div className="mt-6 flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
+            <Link to="/upload" className="btn btn-primary px-6 py-3.5 font-bold shadow-xs">
+              <UploadCloud className="h-4 w-4" aria-hidden="true" />
+              <span>Upload Document</span>
+            </Link>
+            <Link to="/history" className="btn btn-quiet py-3.5">
+              <span>Document History</span>
+            </Link>
+          </div>
+        </div>
+      </Reveal>
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
+        {/* Main Column */}
+        <div className="lg:col-span-8 space-y-10">
+          {/* Upload Invitation Hero Card */}
+          <Reveal>
             <Link
               to="/upload"
-              className="inline-flex items-center gap-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold px-6 py-3.5 rounded-2xl shadow-md transition-all text-base focus:ring-2 focus:ring-white"
+              className="group relative flex flex-col gap-6 overflow-hidden rounded-sm bg-deep-teal p-6 text-white shadow-sm transition-all duration-300 hover:shadow-md sm:flex-row sm:items-center sm:p-8"
             >
-              <UploadCloud className="w-5 h-5 text-emerald-600" />
-              <span>Upload New Document</span>
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(circle at 10% 20%, rgba(15,164,175,0.22), transparent 45%), radial-gradient(circle at 90% 80%, rgba(150,71,52,0.18), transparent 45%)',
+                }}
+              />
+              <span className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-sm bg-bright-cyan text-deep-teal transition-transform group-hover:scale-105">
+                <UploadCloud className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span className="relative z-10 flex-1">
+                <span className="block text-xl font-bold tracking-tight text-white sm:text-2xl">
+                  Analyze a new document
+                </span>
+                <span className="mt-1.5 block text-sm leading-relaxed text-white/75">
+                  Bills, hospital discharge summaries, bank letters and notices — processed in
+                  memory, explained in plain language with key facts & deadlines.
+                </span>
+              </span>
+              <span className="relative z-10 flex items-center gap-2 text-sm font-bold text-bright-cyan transition-transform group-hover:translate-x-1">
+                <span>Start analysis</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </span>
             </Link>
+          </Reveal>
 
-            <Link
-              to="/history"
-              className="inline-flex items-center gap-2 bg-emerald-800/60 hover:bg-emerald-800 text-white font-semibold px-6 py-3.5 rounded-2xl border border-emerald-400/30 transition-all text-base focus:ring-2 focus:ring-white"
-            >
-              <Clock className="w-5 h-5 text-emerald-200" />
-              <span>Past Documents</span>
-            </Link>
+          {/* Recent Documents Section */}
+          <div>
+            <div className="flex items-baseline justify-between border-b border-deep-teal/10 pb-3">
+              <h2 className={sectionHeading}>Recent documents</h2>
+              <Link
+                to="/history"
+                className="text-xs sm:text-sm font-semibold text-deep-teal/70 hover:text-bright-cyan transition-colors"
+              >
+                View all history →
+              </Link>
+            </div>
+
+            {recentState === 'loading' && (
+              <div role="status" className="py-6 space-y-4">
+                <span className="sr-only">Loading recent documents</span>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 rounded-sm border border-deep-teal/10 bg-white p-4"
+                  >
+                    <span className="h-4 w-20 animate-pulse rounded-xs bg-deep-teal/10" />
+                    <span className="h-4 flex-1 animate-pulse rounded-xs bg-deep-teal/10" />
+                    <span className="h-4 w-24 animate-pulse rounded-xs bg-deep-teal/10" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {recentState === 'error' && (
+              <div className="py-8 text-center rounded-sm border border-deep-teal/10 bg-white p-6">
+                <p className="text-sm text-deep-teal/70">
+                  Recent documents are unavailable right now.{' '}
+                  <Link
+                    to="/history"
+                    className="font-semibold text-deep-teal underline underline-offset-4"
+                  >
+                    Open Document History
+                  </Link>{' '}
+                  to view all.
+                </p>
+              </div>
+            )}
+
+            {recentState === 'ready' && recent.length === 0 && (
+              <div className="py-12 text-center rounded-sm border border-dashed border-deep-teal/20 bg-white p-8">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-deep-teal/5 text-deep-teal/60 mb-3">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <p className="text-base font-bold text-deep-teal">No documents analyzed yet.</p>
+                <p className="mt-1 text-sm text-deep-teal/65 max-w-sm mx-auto">
+                  Upload your first electricity bill, hospital report, or government notice to see
+                  plain-language summaries and deadline alerts.
+                </p>
+                <Link to="/upload" className="btn btn-primary mt-6 inline-flex">
+                  <UploadCloud className="h-4 w-4" />
+                  <span>Upload your first document</span>
+                </Link>
+              </div>
+            )}
+
+            {recentState === 'ready' && recent.length > 0 && (
+              <div className="mt-4 divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs">
+                {recent.map((doc) => (
+                  <Link
+                    key={doc.id}
+                    to={`/documents/${doc.id}`}
+                    className="group flex flex-col gap-2 p-4 transition-colors hover:bg-deep-teal/3 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+                  >
+                    <div className="flex items-center gap-2 sm:w-1/4">
+                      <span className="rounded-xs bg-ocean-teal/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-ocean-teal">
+                        {doc.doc_type || 'Document'}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate text-base font-bold text-deep-teal group-hover:text-ocean-teal transition-colors">
+                        {doc.file_name}
+                      </div>
+                      <p className="line-clamp-1 text-xs text-deep-teal/65 mt-0.5">
+                        {doc.plain_summary || 'Analysis ready to view.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-deep-teal/60 sm:w-auto shrink-0">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 text-bright-cyan transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Main Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        {/* Upload Card */}
-        <Link
-          to="/upload"
-          className="group block p-8 bg-white rounded-3xl border-2 border-emerald-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition-all"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <UploadCloud className="w-7 h-7" />
-            </div>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase">
-              Fast & Private
-            </span>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-            Scan & Analyze Document
-          </h2>
-          <p className="text-slate-600 mt-2 text-base leading-relaxed">
-            Upload electricity bills, hospital discharge summaries, bank statements, or legal notices. Processed completely in-memory with Gemini.
-          </p>
-          <div className="mt-6 flex items-center gap-2 text-emerald-600 font-bold text-sm">
-            <span>Start document scan</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </Link>
+        {/* Right Rail: Accessibility & Workspace Info */}
+        <aside className="lg:col-span-4 space-y-6">
+          <Reveal delay={0.08}>
+            <div className="panel p-6 space-y-6">
+              <h2 className={sectionHeading}>Accessibility preferences</h2>
 
-        {/* History Card */}
-        <Link
-          to="/history"
-          className="group block p-8 bg-white rounded-3xl border-2 border-slate-200 hover:border-slate-400 shadow-sm hover:shadow-lg transition-all"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Clock className="w-7 h-7" />
-            </div>
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full uppercase">
-              Saved Archives
-            </span>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-            Document History
-          </h2>
-          <p className="text-slate-600 mt-2 text-base leading-relaxed">
-            Review your previously analyzed documents, check deadlines, review AI summaries, or ask follow-up questions at any time.
-          </p>
-          <div className="mt-6 flex items-center gap-2 text-blue-600 font-bold text-sm">
-            <span>View previous documents</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </Link>
-      </div>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={toggleHighContrast}
+                  aria-pressed={highContrast}
+                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer ${
+                    highContrast
+                      ? 'border-black bg-yellow-400 text-black shadow-xs font-bold'
+                      : 'border-deep-teal/15 bg-surface text-deep-teal hover:border-bright-cyan'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-deep-teal" aria-hidden="true" />
+                    <span>High contrast mode</span>
+                  </span>
+                  <span className="text-xs uppercase tracking-wider opacity-75">
+                    {highContrast ? 'Active' : 'Off'}
+                  </span>
+                </button>
 
-      {/* Accessibility Guidance Box */}
-      <div className="bg-slate-100 border border-slate-200 rounded-3xl p-6 sm:p-8">
-        <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <FileCheck2 className="w-5 h-5 text-emerald-600" />
-          <span>Accessibility Features at Your Fingertips</span>
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-1">
-              <Eye className="w-4 h-4" />
-              <span>High Contrast</span>
-            </div>
-            <p className="text-xs text-slate-600">
-              Click the Contrast button in the top navigation bar to switch to maximum-contrast black/yellow mode for better visibility.
-            </p>
-          </div>
+                <button
+                  type="button"
+                  onClick={toggleLargeText}
+                  aria-pressed={largeText}
+                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer ${
+                    largeText
+                      ? 'border-deep-teal bg-deep-teal text-white shadow-xs font-bold'
+                      : 'border-deep-teal/15 bg-surface text-deep-teal hover:border-bright-cyan'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Type className="h-4 w-4" aria-hidden="true" />
+                    <span>Larger typography</span>
+                  </span>
+                  <span className="text-xs uppercase tracking-wider opacity-75">
+                    {largeText ? '118%' : 'Standard'}
+                  </span>
+                </button>
+              </div>
 
-          <div className="p-4 bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-1">
-              <Type className="w-4 h-4" />
-              <span>Large Text</span>
-            </div>
-            <p className="text-xs text-slate-600">
-              Toggle Text Size anytime to enlarge words, buttons, and badges by 120% for comfortable reading.
-            </p>
-          </div>
+              <div className="border-t border-deep-teal/10 pt-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Volume2 className="mt-0.5 h-4 w-4 shrink-0 text-bright-cyan" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-deep-teal/70">
+                    <strong className="text-deep-teal font-semibold">Audio Read-Aloud:</strong>{' '}
+                    Open any analyzed document and use the audio controls to listen to summaries and
+                    dates via browser speech synthesis.
+                  </p>
+                </div>
 
-          <div className="p-4 bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-1">
-              <Volume2 className="w-4 h-4" />
-              <span>Read Aloud</span>
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-bright-cyan" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-deep-teal/70">
+                    <strong className="text-deep-teal font-semibold">100% In-Memory Privacy:</strong>{' '}
+                    Documents are analyzed in volatile memory without raw storage. Analysis records
+                    are isolated to your account.
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-bright-cyan" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-deep-teal/70">
+                    <strong className="text-deep-teal font-semibold">Follow-up Q&A:</strong> Ask
+                    specific questions on deadlines or amounts grounded directly in your document.
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-slate-600">
-              Once an analysis loads, use the Read Aloud audio player to listen to plain-language summaries and deadline alerts.
-            </p>
-          </div>
-        </div>
+          </Reveal>
+        </aside>
       </div>
     </div>
   );
 };
+
+export default DashboardPage;

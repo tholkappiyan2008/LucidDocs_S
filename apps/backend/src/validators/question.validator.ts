@@ -10,3 +10,4 @@ export const askQuestionSchema = z.object({
 });
 
 export type AskQuestionInput = z.infer<typeof askQuestionSchema>;
+

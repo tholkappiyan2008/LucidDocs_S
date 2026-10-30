@@ -2,13 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClearDoc — AI Document Accessibility & Understanding</title>
+    <meta name="theme-color" content="#08080A" />
+    <meta
+      name="description"
+      content="ClearDoc turns complex documents — bills, medical reports, legal notices — into clear, plain-language explanations in your language."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=gold-1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Aeonik (CoType Foundry) is a commercial licence we do not hold, so Manrope is the
+         documented fallback loaded here; the stack in tailwind.config.js asks for Aeonik first.
+         Indic families keep Tamil/Telugu/Hindi copy typographically consistent. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>ClearDoc — Complex Documents. Clear Understanding.</title>
   </head>
-  <body class="bg-slate-50 text-slate-900 transition-colors duration-200">
+  <body class="bg-noir text-ivory">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
