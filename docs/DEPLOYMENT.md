@@ -160,3 +160,4 @@ Now that both services are running:
   - The Express backend dynamically permits requests matching `FRONTEND_URL`, `http://localhost:*`, and any `https://*.vercel.app` preview deployments.
 - [ ] **Supabase Connectivity**:
   - Verify `https://your-backend.onrender.com/api/v1/health` returns `"database_connected": true`. If `false`, verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Render environment variables.
+
