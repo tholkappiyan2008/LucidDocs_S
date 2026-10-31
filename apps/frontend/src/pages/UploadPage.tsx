@@ -35,7 +35,14 @@ export const UploadPage: React.FC = () => {
 
     if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
       setError(
-        `Unsupported file type (${file.type || 'unknown'}). Please upload a PDF, PNG, or JPEG file.`
+        `Unsupported file type (${file.type || 'unknown'}). Please upload a digital PDF document.`
+      );
+      return;
+    }
+
+    if (file.type.startsWith('image/')) {
+      setError(
+        'Image documents (PNG/JPEG) do not contain a selectable text layer. ClearDoc currently analyzes digital PDF documents (e-bills, medical invoices, statements, and notices).'
       );
       return;
     }
@@ -92,10 +99,13 @@ export const UploadPage: React.FC = () => {
       const res = await validateDocumentUpload(selectedFile, language);
       setUploadSuccess(res);
     } catch (err: any) {
+      const errResponse = err.response?.data?.error;
       const msg =
-        err.response?.data?.error?.message ||
-        'Failed to validate upload pipeline. Please ensure the file is a valid PDF or image.';
-      setError(msg);
+        errResponse?.message ||
+        err.response?.data?.message ||
+        'Failed to validate upload pipeline. Please ensure the file is a valid PDF.';
+      const code = errResponse?.code;
+      setError(code ? `[${code}] ${msg}` : msg);
     } finally {
       setValidating(false);
     }
@@ -115,10 +125,27 @@ export const UploadPage: React.FC = () => {
         navigate(`/documents/${res.document.id}`, { state: { document: res.document } });
       }
     } catch (err: any) {
-      const msg =
-        err.response?.data?.error?.message ||
-        'Document AI analysis failed. Please verify that backend Groq service and Supabase are healthy.';
-      setError(msg);
+      const errResponse = err.response?.data?.error;
+      let msg = '';
+
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        msg = 'The analysis request timed out. Render backend may be waking up from sleep. Please wait 15 seconds and try again.';
+      } else if (errResponse?.message) {
+        msg = errResponse.message;
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.response?.status === 502 || err.response?.status === 503) {
+        msg = 'The backend service is currently waking up or temporarily unavailable on Render. Please try again in 15 seconds.';
+      } else if (err.response?.status === 429) {
+        msg = 'ClearDoc AI is currently experiencing high demand. Please wait a few seconds and try again.';
+      } else if (!err.response && err.message) {
+        msg = `Network error: ${err.message}. Please check that backend server is reachable.`;
+      } else {
+        msg = 'Document AI analysis failed. Please verify that backend Groq service and Supabase are healthy.';
+      }
+
+      const code = errResponse?.code;
+      setError(code ? `[${code}] ${msg}` : msg);
     } finally {
       setAnalyzing(false);
     }

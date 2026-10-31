@@ -1,6 +1,14 @@
 import { config } from '../config/env.js';
 import { DocumentAnalysis, DocumentAnalysisSchema } from '../validators/document.validator.js';
 import { extractText } from 'unpdf';
+import {
+  GroqAuthError,
+  GroqModelError,
+  GroqRateLimitError,
+  GroqResponseError,
+  DocumentExtractionError,
+  AppError,
+} from '../utils/errors.js';
 
 export const GROQ_MODEL = 'qwen/qwen3.8-27b';
 export const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -113,8 +121,8 @@ async function callGroqWithRetry(
   timeoutMs: number = 40000
 ): Promise<any> {
   if (!config.groqApiKey) {
-    throw new Error(
-      'Groq API key is not configured. Please add GROQ_API_KEY to your backend .env file.'
+    throw new GroqAuthError(
+      'Groq API key is not configured. Please add GROQ_API_KEY to your Render environment variables.'
     );
   }
 
@@ -146,19 +154,16 @@ async function callGroqWithRetry(
           const status = response.status;
           const errMsg = errorBody.error?.message || response.statusText;
 
-          // Permanent client errors — DO NOT retry
+          // Permanent client authentication errors (401, 403)
           if (status === 401 || status === 403) {
-            const authErr: any = new Error(
-              'Groq API key is invalid or unauthorized. Please verify GROQ_API_KEY in your backend .env file.'
+            throw new GroqAuthError(
+              `Groq API key is invalid or unauthorized (HTTP ${status}). Please verify GROQ_API_KEY in Render environment variables.`
             );
-            authErr.statusCode = status;
-            throw authErr;
           }
 
+          // Client Bad Request errors (400)
           if (status === 400) {
-            const badReqErr: any = new Error(`Groq request rejected (HTTP 400): ${errMsg}`);
-            badReqErr.statusCode = 400;
-            throw badReqErr;
+            throw new GroqModelError(`Groq request rejected (HTTP 400): ${errMsg}`);
           }
 
           // Rate Limit (429) or temporary server errors (500, 502, 503, 504)
@@ -166,13 +171,11 @@ async function callGroqWithRetry(
             const waitFromHeader = parseGroqWaitTimeMs(response, errMsg);
 
             if (attempt < maxRetries) {
-              // Bounded exponential backoff with random jitter (400-800ms)
               const jitter = Math.floor(Math.random() * 400) + 400;
               let backoffMs = waitFromHeader
                 ? waitFromHeader + jitter
                 : Math.min(2000 * Math.pow(2, attempt) + jitter, 15000);
 
-              // Cap max retry sleep to 25 seconds
               if (backoffMs > 25000) {
                 backoffMs = 25000;
               }
@@ -183,19 +186,13 @@ async function callGroqWithRetry(
               await new Promise((resolve) => setTimeout(resolve, backoffMs));
               continue;
             } else {
-              // Retries exhausted — return a friendly accessibility error
-              const rateLimitErr: any = new Error(
+              throw new GroqRateLimitError(
                 'ClearDoc AI is currently experiencing high demand. Please wait a moment and try again.'
               );
-              rateLimitErr.statusCode = 429;
-              rateLimitErr.code = 'RATE_LIMIT_EXCEEDED';
-              throw rateLimitErr;
             }
           }
 
-          const apiErr: any = new Error(`Groq API error (${status}): ${errMsg}`);
-          apiErr.statusCode = status;
-          throw apiErr;
+          throw new GroqResponseError(`Groq API error (${status}): ${errMsg}`);
         }
 
         const data = await response.json();
@@ -204,18 +201,15 @@ async function callGroqWithRetry(
         clearTimeout(timer);
 
         if (err.name === 'AbortError') {
-          lastError = new Error(`Groq API request timed out after ${timeoutMs / 1000} seconds.`);
+          lastError = new GroqResponseError(
+            `Groq API request timed out after ${timeoutMs / 1000} seconds.`
+          );
         } else {
           lastError = err;
         }
 
-        // If it's a designated permanent or handled rate limit error, rethrow immediately
-        if (
-          err.statusCode === 401 ||
-          err.statusCode === 403 ||
-          err.statusCode === 400 ||
-          err.code === 'RATE_LIMIT_EXCEEDED'
-        ) {
+        // If it's a designated permanent AppError, rethrow immediately
+        if (err instanceof AppError) {
           throw err;
         }
 
@@ -226,7 +220,10 @@ async function callGroqWithRetry(
       }
     }
 
-    throw lastError || new Error('ClearDoc AI is temporarily unavailable. Please try again shortly.');
+    throw (
+      lastError ||
+      new GroqResponseError('ClearDoc AI is temporarily unavailable. Please try again shortly.')
+    );
   });
 }
 
@@ -235,7 +232,7 @@ async function callGroqWithRetry(
  */
 export function sanitizeAndParseJson<T>(rawContent: string): T {
   if (!rawContent || !rawContent.trim()) {
-    throw new Error('Groq returned an empty response body.');
+    throw new GroqResponseError('Groq returned an empty response body.');
   }
 
   // 1. Strip markdown code fences (```json ... ``` or ``` ...)
@@ -285,26 +282,26 @@ export async function extractDocumentContent(
   mimeType: string
 ): Promise<{
   mode: 'text' | 'vision';
-  text?: string;
-  images?: string[]; // base64 data URIs
+  text: string;
 }> {
   // 1. Image Files: PNG / JPEG
   if (mimeType === 'image/png' || mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
-    const dataUri = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-    return {
-      mode: 'vision',
-      images: [dataUri],
-    };
+    throw new DocumentExtractionError(
+      'Image files (PNG/JPEG) do not have a selectable text layer. ClearDoc currently supports digital text PDFs (e-bills, medical invoices, bank statements, and notices). Please save or export your document as a PDF and upload again.'
+    );
   }
 
   // 2. PDF Files
   if (mimeType === 'application/pdf') {
-    // Attempt text extraction via unpdf
+    let combinedText = '';
+    let totalPages = 1;
+
     try {
       const uint8Array = new Uint8Array(fileBuffer);
-      const { text: pageTexts, totalPages } = await extractText(uint8Array);
+      const extracted = await extractText(uint8Array);
+      totalPages = extracted.totalPages || 1;
+      const pageTexts = extracted.text;
 
-      let combinedText = '';
       if (Array.isArray(pageTexts)) {
         if (pageTexts.length <= 3) {
           // 1 to 3 pages: include all text
@@ -314,74 +311,74 @@ export async function extractDocumentContent(
             .trim();
         } else {
           // Multi-page document: prioritize Page 1 (header/summary), Page 2 (breakdown), and Last Page (totals/terms)
-          const p1 = pageTexts[0] ? `--- Page 1 of ${totalPages} (Summary) ---\n${pageTexts[0].trim()}` : '';
-          const p2 = pageTexts[1] ? `--- Page 2 of ${totalPages} (Details) ---\n${pageTexts[1].trim()}` : '';
+          const p1 = pageTexts[0]
+            ? `--- Page 1 of ${totalPages} (Summary) ---\n${pageTexts[0].trim()}`
+            : '';
+          const p2 = pageTexts[1]
+            ? `--- Page 2 of ${totalPages} (Details) ---\n${pageTexts[1].trim()}`
+            : '';
           const lastIdx = pageTexts.length - 1;
-          const pLast = pageTexts[lastIdx] ? `--- Page ${totalPages} of ${totalPages} (Payment/Terms) ---\n${pageTexts[lastIdx].trim()}` : '';
+          const pLast = pageTexts[lastIdx]
+            ? `--- Page ${totalPages} of ${totalPages} (Payment/Terms) ---\n${pageTexts[lastIdx].trim()}`
+            : '';
           combinedText = [p1, p2, pLast].filter(Boolean).join('\n\n').trim();
         }
       } else {
         combinedText = String(pageTexts || '').trim();
       }
+    } catch (pdfErr: any) {
+      console.warn('[PDF Text Extraction Warning]:', pdfErr?.message);
+    }
 
-      // If document contains readable text (at least 30 chars), treat as text document
-      if (combinedText.length >= 30) {
+    // Check if readable text was found (at least 20 chars)
+    if (combinedText.length >= 20) {
+      return {
+        mode: 'text',
+        text: combinedText.slice(0, 10000), // Cap input text to ~2,500 input tokens
+      };
+    }
+
+    // Fallback: inspect PDF document metadata/info dictionary
+    try {
+      const { PDFDocument } = await import('pdf-lib');
+      const loadedDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+      const title = loadedDoc.getTitle() || '';
+      const author = loadedDoc.getAuthor() || '';
+      const subject = loadedDoc.getSubject() || '';
+
+      const metaCombined = [
+        title ? `Title: ${title}` : '',
+        author ? `Author: ${author}` : '',
+        subject ? `Subject: ${subject}` : '',
+        combinedText,
+      ]
+        .filter(Boolean)
+        .join('\n\n')
+        .trim();
+
+      if (metaCombined.length >= 20) {
         return {
           mode: 'text',
-          text: combinedText.slice(0, 10000), // Cap input text to ~2,500 input tokens
+          text: metaCombined.slice(0, 10000),
         };
       }
-    } catch (pdfErr) {
-      console.warn('[PDF Text Extraction Warning]:', pdfErr);
+    } catch (metaErr: any) {
+      console.warn('[PDF Metadata Inspection]:', metaErr?.message);
     }
 
-    // If text was empty or too short, attempt extracting embedded raster images (scanned PDF)
-    try {
-      const pdfLib = await import('pdf-lib').catch(() => null);
-      if (pdfLib) {
-        const { PDFDocument, PDFName } = pdfLib;
-        const loadedDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
-        const extractedImages: string[] = [];
-
-        for (const [_, obj] of loadedDoc.context.enumerateIndirectObjects()) {
-          if (obj && (obj as any).dict) {
-            const dict = (obj as any).dict;
-            const subtype = dict.get(PDFName.of('Subtype'));
-            if (subtype === PDFName.of('Image')) {
-              const filter = dict.get(PDFName.of('Filter'))?.toString();
-              const contents = (obj as any).contents;
-              if (contents && contents.length > 0) {
-                if (filter?.includes('DCTDecode')) {
-                  const jpegBase64 = Buffer.from(contents).toString('base64');
-                  extractedImages.push(`data:image/jpeg;base64,${jpegBase64}`);
-                }
-              }
-            }
-          }
-        }
-
-        if (extractedImages.length > 0) {
-          return {
-            mode: 'vision',
-            images: extractedImages.slice(0, 2), // Limit to top 2 pages to preserve Groq TPM quota
-          };
-        }
-      }
-    } catch (scanErr) {
-      console.warn('[PDF Scanned Image Extraction Warning]:', scanErr);
-    }
-
-    return {
-      mode: 'text',
-      text: '[Notice: Scanned or image-only PDF uploaded. No embedded text layer detected.]',
-    };
+    // If PDF has no extractable text layer (e.g. pure scanned photo/image PDF)
+    throw new DocumentExtractionError(
+      'ClearDoc could not detect any readable text layer in this PDF. It appears to be a scanned image or photo without selectable text. Please upload a digital PDF with selectable text (such as an electronic bill or digital statement).'
+    );
   }
 
-  throw new Error(`Unsupported document MIME type: ${mimeType}. Please upload a PDF, PNG, or JPEG.`);
+  throw new DocumentExtractionError(
+    `Unsupported document MIME type: ${mimeType}. Please upload a digital PDF.`
+  );
 }
 
 /**
- * Analyzes a document using Groq's multimodal AI model with strict token-budget limits.
+ * Analyzes a document using Groq's AI model with strict token-budget limits.
  */
 export async function analyzeDocumentWithGroq(
   fileBuffer: Buffer,
@@ -430,34 +427,12 @@ EXTRACTION RULES:
 7. Be factual, concise, and never fabricate missing details.`;
 
   const extracted = await extractDocumentContent(fileBuffer, mimeType);
-  let messages: any[] = [{ role: 'system', content: systemPrompt }];
+  const safeText = extracted.text.slice(0, 10000);
 
-  if (extracted.mode === 'vision' && extracted.images && extracted.images.length > 0) {
-    const userContent: any[] = [
-      {
-        type: 'text',
-        text: 'Analyze this document image and extract all facts, deadlines, amounts, and risks into the required ClearDoc JSON format.',
-      },
-    ];
-
-    for (const imgUrl of extracted.images) {
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: imgUrl },
-      });
-    }
-
-    messages.push({
-      role: 'user',
-      content: userContent,
-    });
-  } else {
-    const safeText = (extracted.text || '[Empty Document]').slice(0, 10000);
-    messages.push({
-      role: 'user',
-      content: `DOCUMENT CONTENT:\n${safeText}`,
-    });
-  }
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `DOCUMENT CONTENT:\n${safeText}` },
+  ];
 
   const payload = {
     model: GROQ_MODEL,
@@ -476,7 +451,9 @@ EXTRACTION RULES:
     return validated;
   } catch (parseErr: any) {
     console.error('[Groq Schema Validation Error]:', parseErr.message);
-    throw new Error(`ClearDoc received incomplete document schema from AI: ${parseErr.message}`);
+    throw new GroqResponseError(
+      `ClearDoc received incomplete document schema from AI: ${parseErr.message}`
+    );
   }
 }
 
@@ -522,7 +499,8 @@ ${JSON.stringify(originalAnalysis)}`;
     messages: [
       {
         role: 'system',
-        content: 'You are an accurate translation engine. Output ONLY concise, valid JSON matching the exact schema.',
+        content:
+          'You are an accurate translation engine. Output ONLY concise, valid JSON matching the exact schema.',
       },
       { role: 'user', content: translationPrompt },
     ],
@@ -540,7 +518,7 @@ ${JSON.stringify(originalAnalysis)}`;
     return validated;
   } catch (parseErr: any) {
     console.error('[Groq Translation Validation Error]:', parseErr.message);
-    throw new Error(`ClearDoc translation failed: ${parseErr.message}`);
+    throw new GroqResponseError(`ClearDoc translation failed: ${parseErr.message}`);
   }
 }
 
@@ -578,7 +556,8 @@ RULES:
     messages: [
       {
         role: 'system',
-        content: 'You are a grounded assistant that answers strictly using the document context and outputs ONLY valid JSON.',
+        content:
+          'You are a grounded assistant that answers strictly using the document context and outputs ONLY valid JSON.',
       },
       { role: 'user', content: prompt },
     ],
@@ -598,6 +577,6 @@ RULES:
     };
   } catch (parseErr: any) {
     console.error('[Groq Q&A Parse Error]:', parseErr.message);
-    throw new Error(`ClearDoc Q&A response parsing failed: ${parseErr.message}`);
+    throw new GroqResponseError(`ClearDoc Q&A response parsing failed: ${parseErr.message}`);
   }
 }

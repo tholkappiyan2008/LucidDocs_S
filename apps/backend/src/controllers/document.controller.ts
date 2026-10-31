@@ -8,6 +8,35 @@ import {
 } from '../services/groq.service.js';
 import { askQuestionSchema } from '../validators/question.validator.js';
 import { getSupabase } from '../config/supabase.js';
+import {
+  DocumentUploadError,
+  SupabaseConnectionError,
+  SupabaseQueryError,
+} from '../utils/errors.js';
+
+/**
+ * Safely executes a Supabase query and translates network or DB errors into standard ClearDoc errors.
+ */
+async function executeSupabaseQuery<T>(queryFn: () => Promise<{ data: T | null; error: any }>): Promise<T> {
+  let res: { data: T | null; error: any };
+  try {
+    res = await queryFn();
+  } catch (err: any) {
+    throw new SupabaseConnectionError(
+      `Failed to connect to Supabase database: ${err?.message || 'Network unreachable'}`
+    );
+  }
+
+  if (res.error) {
+    throw new SupabaseQueryError(`Database query error: ${res.error.message || 'Operation failed'}`);
+  }
+
+  if (res.data === null) {
+    throw new SupabaseQueryError('Database returned no data for the requested operation.');
+  }
+
+  return res.data;
+}
 
 export async function analyzeDocumentHandler(
   req: AuthenticatedRequest,
@@ -26,11 +55,7 @@ export async function analyzeDocumentHandler(
 
     const file = req.file;
     if (!file) {
-      res.status(400).json({
-        success: false,
-        error: { code: 'FILE_MISSING', message: 'No document file provided.' },
-      });
-      return;
+      throw new DocumentUploadError('No document file was uploaded. Please attach a digital PDF file.');
     }
 
     // Validate magic-byte file signature
@@ -41,19 +66,14 @@ export async function analyzeDocumentHandler(
     );
 
     if (!signatureCheck.isValid) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'INVALID_SIGNATURE',
-          message: signatureCheck.error,
-        },
-      });
-      return;
+      throw new DocumentUploadError(
+        signatureCheck.error || 'Invalid file signature. Only genuine PDF documents are supported.'
+      );
     }
 
     const targetLanguage = req.body.language || 'en';
 
-    // Run Multimodal AI Analysis with Groq
+    // Run AI Document Analysis with Groq
     const analysis = await analyzeDocumentWithGroq(
       file.buffer,
       signatureCheck.mimeType!,
@@ -62,22 +82,35 @@ export async function analyzeDocumentHandler(
 
     // Persist analysis into Supabase PostgreSQL
     const supabase = getSupabase();
-    const { data: savedDoc, error: dbError } = await supabase
-      .from('documents')
-      .insert({
-        user_id: userId,
-        file_name: file.originalname,
-        mime_type: signatureCheck.mimeType,
-        doc_type: analysis.doc_type,
-        sender: analysis.sender,
-        plain_summary: analysis.plain_summary,
-        analysis: analysis,
-      })
-      .select('id, user_id, file_name, mime_type, doc_type, sender, plain_summary, analysis, created_at')
-      .single();
+    let savedDoc: any = null;
+    let dbError: any = null;
+
+    try {
+      const dbRes = await supabase
+        .from('documents')
+        .insert({
+          user_id: userId,
+          file_name: file.originalname,
+          mime_type: signatureCheck.mimeType,
+          doc_type: analysis.doc_type,
+          sender: analysis.sender,
+          plain_summary: analysis.plain_summary,
+          analysis: analysis,
+        })
+        .select('id, user_id, file_name, mime_type, doc_type, sender, plain_summary, analysis, created_at')
+        .single();
+      savedDoc = dbRes.data;
+      dbError = dbRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach Supabase database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (dbError || !savedDoc) {
-      throw new Error(`Failed to save document analysis in Supabase: ${dbError?.message || 'Unknown database error'}`);
+      throw new SupabaseQueryError(
+        `Failed to save document analysis in database: ${dbError?.message || 'Insert rejected'}`
+      );
     }
 
     res.status(201).json({
@@ -115,17 +148,30 @@ export async function getDocumentsHandler(
 
     const supabase = getSupabase();
 
-    const { data: docs, count, error } = await supabase
-      .from('documents')
-      .select('id, file_name, mime_type, doc_type, sender, plain_summary, created_at', {
-        count: 'exact',
-      })
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let docs: any = null;
+    let count: number | null = null;
+    let error: any = null;
+
+    try {
+      const dbRes = await supabase
+        .from('documents')
+        .select('id, file_name, mime_type, doc_type, sender, plain_summary, created_at', {
+          count: 'exact',
+        })
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      docs = dbRes.data;
+      count = dbRes.count;
+      error = dbRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (error) {
-      throw new Error(`Database error fetching documents: ${error.message}`);
+      throw new SupabaseQueryError(`Database error fetching documents: ${error.message}`);
     }
 
     const total = count ?? (docs ? docs.length : 0);
@@ -168,14 +214,29 @@ export async function getDocumentByIdHandler(
     const docId = req.params.id;
     const supabase = getSupabase();
 
-    const { data: doc, error } = await supabase
-      .from('documents')
-      .select('id, user_id, file_name, mime_type, doc_type, sender, plain_summary, analysis, created_at')
-      .eq('id', docId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let doc: any = null;
+    let error: any = null;
 
-    if (error || !doc) {
+    try {
+      const dbRes = await supabase
+        .from('documents')
+        .select('id, user_id, file_name, mime_type, doc_type, sender, plain_summary, analysis, created_at')
+        .eq('id', docId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      doc = dbRes.data;
+      error = dbRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
+
+    if (error) {
+      throw new SupabaseQueryError(`Database error fetching document: ${error.message}`);
+    }
+
+    if (!doc) {
       res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Document not found or access denied.' },
@@ -215,15 +276,26 @@ export async function deleteDocumentHandler(
     const supabase = getSupabase();
 
     // Verify ownership first
-    const { data: existingDoc, error: checkError } = await supabase
-      .from('documents')
-      .select('id')
-      .eq('id', docId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let existingDoc: any = null;
+    let checkError: any = null;
+
+    try {
+      const checkRes = await supabase
+        .from('documents')
+        .select('id')
+        .eq('id', docId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      existingDoc = checkRes.data;
+      checkError = checkRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (checkError) {
-      throw new Error(`Database error verifying document: ${checkError.message}`);
+      throw new SupabaseQueryError(`Database error verifying document: ${checkError.message}`);
     }
 
     if (!existingDoc) {
@@ -238,14 +310,21 @@ export async function deleteDocumentHandler(
     }
 
     // Delete document (cascade removes related questions & actions)
-    const { error: deleteError } = await supabase
-      .from('documents')
-      .delete()
-      .eq('id', docId)
-      .eq('user_id', userId);
+    try {
+      const { error: deleteError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', docId)
+        .eq('user_id', userId);
 
-    if (deleteError) {
-      throw new Error(`Failed to delete document: ${deleteError.message}`);
+      if (deleteError) {
+        throw new SupabaseQueryError(`Failed to delete document: ${deleteError.message}`);
+      }
+    } catch (netErr: any) {
+      if (netErr instanceof SupabaseQueryError) throw netErr;
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
     }
 
     res.status(200).json({
@@ -282,14 +361,29 @@ export async function translateDocumentHandler(
     const supabase = getSupabase();
 
     // Fetch document verifying ownership
-    const { data: doc, error } = await supabase
-      .from('documents')
-      .select('id, user_id, analysis')
-      .eq('id', docId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let doc: any = null;
+    let error: any = null;
 
-    if (error || !doc) {
+    try {
+      const dbRes = await supabase
+        .from('documents')
+        .select('id, user_id, analysis')
+        .eq('id', docId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      doc = dbRes.data;
+      error = dbRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
+
+    if (error) {
+      throw new SupabaseQueryError(`Database error verifying document: ${error.message}`);
+    }
+
+    if (!doc) {
       res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Document not found or access denied.' },
@@ -337,15 +431,26 @@ export async function askDocumentQuestionHandler(
     const supabase = getSupabase();
 
     // 1. Verify document ownership
-    const { data: doc, error: docError } = await supabase
-      .from('documents')
-      .select('id, user_id, analysis')
-      .eq('id', docId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let doc: any = null;
+    let docError: any = null;
+
+    try {
+      const dbRes = await supabase
+        .from('documents')
+        .select('id, user_id, analysis')
+        .eq('id', docId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      doc = dbRes.data;
+      docError = dbRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (docError) {
-      throw new Error(`Database error verifying document: ${docError.message}`);
+      throw new SupabaseQueryError(`Database error verifying document: ${docError.message}`);
     }
 
     if (!doc) {
@@ -364,20 +469,33 @@ export async function askDocumentQuestionHandler(
     );
 
     // 3. Persist conversation into document_questions
-    const { data: savedQuestion, error: saveError } = await supabase
-      .from('document_questions')
-      .insert({
-        document_id: docId,
-        user_id: userId,
-        question: validated.question,
-        answer: qaResult.answer,
-        is_grounded: qaResult.is_grounded,
-      })
-      .select('id, document_id, user_id, question, answer, is_grounded, created_at')
-      .single();
+    let savedQuestion: any = null;
+    let saveError: any = null;
+
+    try {
+      const saveRes = await supabase
+        .from('document_questions')
+        .insert({
+          document_id: docId,
+          user_id: userId,
+          question: validated.question,
+          answer: qaResult.answer,
+          is_grounded: qaResult.is_grounded,
+        })
+        .select('id, document_id, user_id, question, answer, is_grounded, created_at')
+        .single();
+      savedQuestion = saveRes.data;
+      saveError = saveRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (saveError || !savedQuestion) {
-      throw new Error(`Failed to save question history: ${saveError?.message || 'Unknown database error'}`);
+      throw new SupabaseQueryError(
+        `Failed to save question history: ${saveError?.message || 'Unknown database error'}`
+      );
     }
 
     res.status(201).json({
@@ -412,12 +530,23 @@ export async function getDocumentQuestionsHandler(
     const supabase = getSupabase();
 
     // Verify document ownership first
-    const { data: doc, error: docError } = await supabase
-      .from('documents')
-      .select('id')
-      .eq('id', docId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let doc: any = null;
+    let docError: any = null;
+
+    try {
+      const checkRes = await supabase
+        .from('documents')
+        .select('id')
+        .eq('id', docId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      doc = checkRes.data;
+      docError = checkRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (docError || !doc) {
       res.status(404).json({
@@ -427,15 +556,26 @@ export async function getDocumentQuestionsHandler(
       return;
     }
 
-    const { data: questions, error } = await supabase
-      .from('document_questions')
-      .select('id, document_id, user_id, question, answer, is_grounded, created_at')
-      .eq('document_id', docId)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
+    let questions: any = null;
+    let error: any = null;
+
+    try {
+      const qRes = await supabase
+        .from('document_questions')
+        .select('id, document_id, user_id, question, answer, is_grounded, created_at')
+        .eq('document_id', docId)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      questions = qRes.data;
+      error = qRes.error;
+    } catch (netErr: any) {
+      throw new SupabaseConnectionError(
+        `Failed to reach database: ${netErr?.message || 'Connection error'}`
+      );
+    }
 
     if (error) {
-      throw new Error(`Database error fetching questions: ${error.message}`);
+      throw new SupabaseQueryError(`Database error fetching questions: ${error.message}`);
     }
 
     res.status(200).json({

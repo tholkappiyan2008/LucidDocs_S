@@ -78,10 +78,15 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
         setQuestions((prev) => [...prev, res.question]);
       }
     } catch (err: any) {
+      const errResponse = err.response?.data?.error;
       const msg =
-        err.response?.data?.error?.message ||
-        'Could not generate an answer. Please verify backend environment configuration.';
-      setError(msg);
+        errResponse?.message ||
+        err.response?.data?.message ||
+        (err.code === 'ECONNABORTED'
+          ? 'Answer request timed out. Please try asking again.'
+          : 'Could not generate an answer. Please verify backend environment configuration.');
+      const code = errResponse?.code;
+      setError(code ? `[${code}] ${msg}` : msg);
     } finally {
       setAsking(false);
     }
