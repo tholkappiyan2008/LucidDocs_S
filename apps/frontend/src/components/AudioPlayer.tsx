@@ -232,7 +232,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </button>
 
           {/* Speed Selector */}
-          <div className="ml-auto flex items-center gap-1.5 rounded-sm border border-deep-teal/15 bg-surface px-2.5 py-1">
+          <div className="flex items-center gap-1.5 rounded-sm border border-deep-teal/15 bg-surface px-2.5 py-1 sm:ml-auto">
             <Gauge className="h-3.5 w-3.5 text-deep-teal/60" aria-hidden="true" />
             <span className="hidden text-xs font-semibold text-deep-teal/70 sm:inline mr-1">
               Speed

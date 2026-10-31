@@ -29,7 +29,7 @@ const AppRoutes: React.FC = () => {
       <motion.main
         key={location.pathname}
         id="main-content"
-        className="flex-1"
+        className="flex-1 w-full max-w-full overflow-x-hidden"
         initial={reduce ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={reduce ? undefined : { opacity: 0 }}
@@ -95,7 +95,7 @@ export const App: React.FC = () => {
             >
               Skip to main content
             </a>
-            <div className="flex min-h-screen flex-col bg-surface text-deep-teal">
+            <div className="flex min-h-screen flex-col bg-surface text-deep-teal w-full max-w-full overflow-x-hidden">
               <Navbar />
               <AppRoutes />
               <Footer />

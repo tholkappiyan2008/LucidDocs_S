@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
               <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
               <span>Workspace</span>
             </div>
-            <h1 className="mt-4 text-[clamp(2rem,3.5vw,3rem)] font-extrabold leading-[1.05] tracking-tight text-deep-teal">
+            <h1 className="mt-4 text-3xl sm:text-[clamp(2rem,3.5vw,3rem)] font-extrabold leading-[1.05] tracking-tight text-deep-teal break-words">
               Welcome back, {user?.name?.split(' ')[0]}.
             </h1>
             <p className="mt-2 max-w-xl text-base leading-relaxed text-deep-teal/70">
@@ -65,12 +65,12 @@ export const DashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link to="/upload" className="btn btn-primary px-6 py-3.5 font-bold shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full sm:w-auto">
+            <Link to="/upload" className="btn btn-primary w-full sm:w-auto px-6 py-3.5 font-bold shadow-xs justify-center">
               <UploadCloud className="h-4 w-4" aria-hidden="true" />
               <span>Upload Document</span>
             </Link>
-            <Link to="/history" className="btn btn-quiet py-3.5">
+            <Link to="/history" className="btn btn-quiet w-full sm:w-auto py-3.5 justify-center">
               <span>Document History</span>
             </Link>
           </div>
@@ -79,12 +79,12 @@ export const DashboardPage: React.FC = () => {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
         {/* Main Column */}
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 min-w-0 space-y-10">
           {/* Upload Invitation Hero Card */}
           <Reveal>
             <Link
               to="/upload"
-              className="group relative flex flex-col gap-6 overflow-hidden rounded-sm bg-deep-teal p-6 text-white shadow-sm transition-all duration-300 hover:shadow-md sm:flex-row sm:items-center sm:p-8"
+              className="group relative flex flex-col gap-6 overflow-hidden rounded-sm bg-deep-teal p-6 text-white shadow-sm transition-all duration-300 hover:shadow-md sm:flex-row sm:items-center sm:p-8 w-full max-w-full"
             >
               <div
                 className="pointer-events-none absolute inset-0"
@@ -173,20 +173,20 @@ export const DashboardPage: React.FC = () => {
             )}
 
             {recentState === 'ready' && recent.length > 0 && (
-              <div className="mt-4 divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs">
+              <div className="mt-4 divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs overflow-hidden">
                 {recent.map((doc) => (
                   <Link
                     key={doc.id}
                     to={`/documents/${doc.id}`}
-                    className="group flex flex-col gap-2 p-4 transition-colors hover:bg-deep-teal/3 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+                    className="group flex flex-col gap-2.5 p-4 transition-colors hover:bg-deep-teal/3 sm:flex-row sm:items-center sm:gap-4 sm:p-5 w-full max-w-full min-w-0"
                   >
-                    <div className="flex items-center gap-2 sm:w-1/4">
+                    <div className="flex items-center gap-2 sm:w-1/4 shrink-0">
                       <span className="rounded-xs bg-ocean-teal/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-ocean-teal">
                         {doc.doc_type || 'Document'}
                       </span>
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 w-full overflow-hidden">
                       <div className="truncate text-base font-bold text-deep-teal group-hover:text-ocean-teal transition-colors">
                         {doc.file_name}
                       </div>
@@ -195,12 +195,12 @@ export const DashboardPage: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-deep-teal/60 sm:w-auto shrink-0">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-deep-teal/60 sm:w-auto shrink-0 pt-1 sm:pt-0 border-t border-deep-teal/5 sm:border-0">
                       <span className="inline-flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                       </span>
-                      <ArrowRight className="h-4 w-4 text-bright-cyan transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="h-4 w-4 text-bright-cyan transition-transform group-hover:translate-x-1 shrink-0" />
                     </div>
                   </Link>
                 ))}
@@ -210,9 +210,9 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Right Rail: Accessibility & Workspace Info */}
-        <aside className="lg:col-span-4 space-y-6">
+        <aside className="lg:col-span-4 min-w-0 space-y-6">
           <Reveal delay={0.08}>
-            <div className="panel p-6 space-y-6">
+            <div className="panel p-5 sm:p-6 space-y-6">
               <h2 className={sectionHeading}>Accessibility preferences</h2>
 
               <div className="flex flex-col gap-2.5">
@@ -220,17 +220,17 @@ export const DashboardPage: React.FC = () => {
                   type="button"
                   onClick={toggleHighContrast}
                   aria-pressed={highContrast}
-                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer ${
+                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer w-full min-w-0 ${
                     highContrast
                       ? 'border-black bg-yellow-400 text-black shadow-xs font-bold'
                       : 'border-deep-teal/15 bg-surface text-deep-teal hover:border-bright-cyan'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-deep-teal" aria-hidden="true" />
-                    <span>High contrast mode</span>
+                  <span className="flex items-center gap-2 min-w-0 truncate">
+                    <Eye className="h-4 w-4 text-deep-teal shrink-0" aria-hidden="true" />
+                    <span className="truncate">High contrast mode</span>
                   </span>
-                  <span className="text-xs uppercase tracking-wider opacity-75">
+                  <span className="text-xs uppercase tracking-wider opacity-75 shrink-0">
                     {highContrast ? 'Active' : 'Off'}
                   </span>
                 </button>
@@ -239,17 +239,17 @@ export const DashboardPage: React.FC = () => {
                   type="button"
                   onClick={toggleLargeText}
                   aria-pressed={largeText}
-                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer ${
+                  className={`flex items-center justify-between gap-3 border px-4 py-3 rounded-sm text-sm font-semibold transition-colors cursor-pointer w-full min-w-0 ${
                     largeText
                       ? 'border-deep-teal bg-deep-teal text-white shadow-xs font-bold'
                       : 'border-deep-teal/15 bg-surface text-deep-teal hover:border-bright-cyan'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <Type className="h-4 w-4" aria-hidden="true" />
-                    <span>Larger typography</span>
+                  <span className="flex items-center gap-2 min-w-0 truncate">
+                    <Type className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span className="truncate">Larger typography</span>
                   </span>
-                  <span className="text-xs uppercase tracking-wider opacity-75">
+                  <span className="text-xs uppercase tracking-wider opacity-75 shrink-0">
                     {largeText ? '118%' : 'Standard'}
                   </span>
                 </button>

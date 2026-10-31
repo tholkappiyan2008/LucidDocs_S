@@ -132,14 +132,14 @@ export const LandingPage: React.FC = () => {
           }}
         />
 
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8 lg:px-10 pt-12 sm:pt-16 lg:pt-24 pb-14 sm:pb-18 lg:pb-24">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-8 lg:px-10 pt-10 sm:pt-16 lg:pt-24 pb-12 sm:pb-18 lg:pb-24">
           <div className="mx-auto grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:gap-14 xl:gap-20">
             {/* ---------- Copy ---------- */}
             <Reveal delay={0.04}>
               <div className="min-w-0">
                 <Eyebrow label="AI for Accessibility & Digital Inclusion" />
 
-                <h1 className="mt-6 text-balance text-[2.5rem] leading-[1.05] tracking-tight sm:text-4xl lg:text-[3.625rem] xl:text-[4.0625rem] xl:leading-[0.98] xl:tracking-[-0.02em]">
+                <h1 className="mt-6 text-balance text-3xl leading-[1.08] tracking-tight sm:text-4xl lg:text-[3.625rem] xl:text-[4.0625rem] xl:leading-[0.98] xl:tracking-[-0.02em] font-extrabold">
                   Documents
                   <span className="block text-terracotta">shouldn’t be difficult.</span>
                 </h1>
@@ -214,12 +214,12 @@ export const LandingPage: React.FC = () => {
           style={{ background: 'radial-gradient(900px 500px at 50% 0%, rgba(15,164,175,0.14), transparent 60%)' }}
         />
 
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-8 lg:px-10">
           {/* section heading */}
           <Reveal>
             <div className="mx-auto max-w-2xl text-center">
               <Eyebrow label="Simple 3-step process" />
-              <h2 className="mx-auto mt-4 max-w-xl text-center text-balance text-[2.5rem] leading-snug text-white font-extrabold sm:text-4xl lg:text-[3.625rem] xl:text-[4rem]">
+              <h2 className="mx-auto mt-4 max-w-xl text-center text-balance text-2xl leading-snug text-white font-extrabold sm:text-4xl lg:text-[3.625rem] xl:text-[4rem]">
                 From confusing paperwork
                 <span className="block text-bright-cyan">to clear understanding.</span>
               </h2>
@@ -263,11 +263,11 @@ export const LandingPage: React.FC = () => {
           style={{ background: 'radial-gradient(900px 460px at 50% -10%, rgba(15,164,175,0.06), transparent 60%)' }}
         />
 
-        <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-10 pb-14 sm:pb-20 lg:pb-24">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-10 pb-12 sm:pb-20 lg:pb-24">
           <Reveal>
             <div className="mx-auto max-w-3xl text-center">
               <Eyebrow label="See exactly what you get" />
-              <h2 className="mt-5 text-balance text-[2.75rem] leading-tight text-extrabold tracking-tight sm:text-4xl lg:text-[3.5rem] xl:text-[3.875rem]">
+              <h2 className="mt-5 text-balance text-2xl leading-tight font-extrabold tracking-tight sm:text-4xl lg:text-[3.5rem] xl:text-[3.875rem]">
                 Your document, translated into action.
               </h2>
               <p className="mt-4 max-w-xl text-center text-[1.0625rem] leading-[1.6] text-deep-teal/70">
@@ -297,11 +297,11 @@ export const LandingPage: React.FC = () => {
           style={{ background: 'radial-gradient(900px 460px at 50% 0%, rgba(15,164,175,0.10), transparent 65%)' }}
         />
 
-        <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-10">
           <Reveal>
             <div className="mx-auto max-w-3xl text-center">
               <Eyebrow label="Capabilities · V1" />
-              <h2 className="mt-5 text-balance text-[2.625rem] leading-tight text-extrabold tracking-tight sm:text-4xl lg:text-[3.375rem] xl:text-[3.75rem]">
+              <h2 className="mt-5 text-balance text-2xl leading-tight font-extrabold tracking-tight sm:text-4xl lg:text-[3.375rem] xl:text-[3.75rem]">
                 Built for everyone,
                 <span className="block text-terracotta">regardless of literacy or vision.</span>
               </h2>
@@ -364,13 +364,13 @@ export const LandingPage: React.FC = () => {
           }}
         />
 
-        <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-10">
           <div className="mx-auto grid gap-10 items-start max-w-4xl lg:grid-cols-2 lg:gap-16 xl:gap-20">
             {/* Copy */}
             <Reveal>
               <div className="min-w-0">
                 <Eyebrow label="Accessibility first" />
-                <h2 className="mt-4 text-balance text-[2.25rem] leading-snug text-extrabold tracking-tight sm:text-3xl lg:text-[3.25rem] xl:text-[3.5rem]">
+                <h2 className="mt-4 text-balance text-2xl leading-snug font-extrabold tracking-tight sm:text-3xl lg:text-[3.25rem] xl:text-[3.5rem]">
                   Technology should be
                   <span className="block text-bright-cyan">accessible to everyone.</span>
                 </h2>
@@ -486,7 +486,7 @@ export const LandingPage: React.FC = () => {
           F. FINAL CTA — deep teal, restrained cyan accents
           =========================================================== */}
       <section
-        className="relative overflow-hidden px-5 py-20 sm:py-24 lg:py-28"
+        className="relative overflow-hidden px-4 py-16 sm:py-24 lg:py-28"
         style={{ background: 'linear-gradient(180deg, #003135 0%, #024950 100%)' }}
       >
         <div
@@ -503,7 +503,7 @@ export const LandingPage: React.FC = () => {
             <div className="text-white/60 text-[0.6875rem] font-extrabold uppercase tracking-[0.2em]">
               Make every document easier to understand
             </div>
-            <h2 className="mt-3 max-w-2xl text-center text-balance text-[2.625rem] leading-snug text-white font-extrabold tracking-tight sm:text-4xl lg:text-[3.5rem] xl:text-4xl">
+            <h2 className="mt-3 max-w-2xl text-center text-balance text-2xl leading-snug text-white font-extrabold tracking-tight sm:text-4xl lg:text-[3.5rem] xl:text-4xl">
               Make Every Document
               <span className="block text-bright-cyan">Easier to Understand.</span>
             </h2>

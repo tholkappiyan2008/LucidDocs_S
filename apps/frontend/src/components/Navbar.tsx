@@ -67,7 +67,7 @@ export const Navbar: React.FC = () => {
           {/* Brand */}
           <Link
             to={user ? '/dashboard' : '/'}
-            className="group inline-flex items-center gap-2.5 rounded-sm p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-bright-cyan"
+            className="group inline-flex items-center gap-2.5 rounded-sm p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-bright-cyan shrink-0 min-w-0"
             aria-label="ClearDoc Home"
           >
             <Logo />
@@ -139,7 +139,7 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Right Controls: Accessibility + Auth */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Accessibility Toggles: Contrast & Text Size */}
             <div
               className="flex items-center border border-deep-teal/15 bg-surface rounded-sm p-0.5"
@@ -152,7 +152,7 @@ export const Navbar: React.FC = () => {
                 aria-pressed={highContrast}
                 aria-label="Toggle High Contrast Mode"
                 title="Toggle High Contrast Mode"
-                className={`flex h-8 px-2.5 items-center gap-1.5 rounded-xs text-xs font-bold transition-colors cursor-pointer ${
+                className={`flex h-8 px-2 sm:px-2.5 items-center gap-1 sm:gap-1.5 rounded-xs text-xs font-bold transition-colors cursor-pointer ${
                   highContrast
                     ? 'bg-yellow-400 text-black shadow-xs ring-1 ring-black'
                     : 'text-deep-teal/75 hover:bg-white hover:text-deep-teal'
@@ -168,7 +168,7 @@ export const Navbar: React.FC = () => {
                 aria-pressed={largeText}
                 aria-label="Toggle Large Text Size"
                 title="Toggle Large Text Size"
-                className={`flex h-8 px-2.5 items-center gap-1.5 rounded-xs text-xs font-bold transition-colors cursor-pointer ${
+                className={`flex h-8 px-2 sm:px-2.5 items-center gap-1 sm:gap-1.5 rounded-xs text-xs font-bold transition-colors cursor-pointer ${
                   largeText
                     ? 'bg-deep-teal text-white shadow-xs'
                     : 'text-deep-teal/75 hover:bg-white hover:text-deep-teal'
@@ -232,12 +232,12 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Dropdown Menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-deep-teal/10 py-4 pb-6 space-y-3 bg-white shadow-lg animate-rise">
+          <div className="md:hidden border-t border-deep-teal/10 py-4 pb-6 space-y-3 bg-white shadow-lg animate-rise w-full max-w-full overflow-hidden">
             {user ? (
               <div className="space-y-1">
-                <div className="px-3 py-2 mb-2 bg-deep-teal/5 rounded-sm flex items-center gap-2 text-sm font-semibold text-deep-teal">
-                  <UserIcon className="h-4 w-4 text-bright-cyan" />
-                  <span>{user.name}</span>
+                <div className="px-3 py-2 mb-2 bg-deep-teal/5 rounded-sm flex items-center gap-2 text-sm font-semibold text-deep-teal min-w-0">
+                  <UserIcon className="h-4 w-4 text-bright-cyan shrink-0" />
+                  <span className="truncate">{user.name}</span>
                 </div>
                 <Link
                   to="/dashboard"

@@ -85,7 +85,7 @@ export const HistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
       {/* Header */}
       <header className="flex flex-col gap-6 border-b border-deep-teal/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -93,7 +93,7 @@ export const HistoryPage: React.FC = () => {
             <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
             <span>Document Archive</span>
           </div>
-          <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal">
+          <h1 className="mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal break-words">
             Document History
           </h1>
           <p className="mt-2.5 max-w-xl text-base leading-relaxed text-deep-teal/70">
@@ -101,7 +101,7 @@ export const HistoryPage: React.FC = () => {
           </p>
         </div>
 
-        <Link to="/upload" className="btn btn-primary px-6 py-3.5 font-bold shadow-xs shrink-0">
+        <Link to="/upload" className="btn btn-primary px-6 py-3.5 font-bold shadow-xs shrink-0 w-full sm:w-auto justify-center">
           <UploadCloud className="h-4 w-4" aria-hidden="true" />
           <span>Upload Document</span>
         </Link>
@@ -180,24 +180,24 @@ export const HistoryPage: React.FC = () => {
       ) : (
         /* Document Cards List */
         <div className="mt-8 space-y-4">
-          <div className="divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs">
+          <div className="divide-y divide-deep-teal/10 rounded-sm border border-deep-teal/10 bg-white shadow-xs overflow-hidden">
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="group p-5 sm:p-6 transition-colors hover:bg-deep-teal/2"
+                className="group p-4 sm:p-6 transition-colors hover:bg-deep-teal/2"
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-center sm:gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-center sm:gap-6 min-w-0">
                   {/* Metadata */}
-                  <div className="sm:col-span-3 space-y-1">
+                  <div className="sm:col-span-3 min-w-0 space-y-1">
                     <span className="inline-block rounded-xs bg-ocean-teal/10 px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-ocean-teal">
                       {doc.doc_type || 'Document'}
                     </span>
                     <p className="flex items-center gap-1.5 text-xs text-deep-teal/70">
-                      <Building className="h-3 w-3 text-deep-teal/40" />
+                      <Building className="h-3 w-3 text-deep-teal/40 shrink-0" />
                       <span className="truncate">{doc.sender || 'Unknown Sender'}</span>
                     </p>
                     <p className="flex items-center gap-1.5 text-xs text-deep-teal/50">
-                      <Clock className="h-3 w-3 text-deep-teal/40" />
+                      <Clock className="h-3 w-3 text-deep-teal/40 shrink-0" />
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                     </p>
                   </div>
@@ -213,7 +213,7 @@ export const HistoryPage: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 sm:col-span-3 sm:justify-end">
+                  <div className="flex items-center gap-2 sm:col-span-3 sm:justify-end shrink-0 pt-2 sm:pt-0 border-t border-deep-teal/5 sm:border-0">
                     <Link
                       to={`/documents/${doc.id}`}
                       className="btn btn-primary px-4 py-2 text-xs font-bold shadow-xs flex-1 sm:flex-none justify-center"
@@ -226,7 +226,7 @@ export const HistoryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDocToDelete(doc)}
-                      className="p-2 rounded-sm text-deep-teal/40 hover:text-terracotta hover:bg-terracotta/10 transition-colors cursor-pointer"
+                      className="p-2 rounded-sm text-deep-teal/40 hover:text-terracotta hover:bg-terracotta/10 transition-colors cursor-pointer shrink-0"
                       title="Delete document permanently"
                       aria-label={`Delete document ${doc.file_name}`}
                     >
@@ -240,7 +240,7 @@ export const HistoryPage: React.FC = () => {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between gap-4 border-t border-deep-teal/10 pt-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-deep-teal/10 pt-6">
               <span className="text-xs font-semibold text-deep-teal/65">
                 Page {pagination.page} of {pagination.totalPages} · {pagination.total} total documents
               </span>

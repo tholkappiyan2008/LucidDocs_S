@@ -122,7 +122,7 @@ export const DocumentDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
       {/* Navigation Toolbar */}
       <div className="flex flex-col gap-4 border-b border-deep-teal/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <Link
@@ -201,9 +201,9 @@ export const DocumentDetailPage: React.FC = () => {
       {/* Summary and Details Grid */}
       <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
         {/* Left Column: Plain-Language Summary, Facts, Next Steps */}
-        <section className="lg:col-span-7 space-y-10">
+        <section className="lg:col-span-7 min-w-0 space-y-10">
           {/* Summary Box */}
-          <div className="panel p-6 sm:p-8 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
+          <div className="panel p-5 sm:p-8 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
             <div className="flex items-center justify-between border-b border-deep-teal/10 pb-3">
               <h2 className={labelClass}>Plain-language summary</h2>
               <span className="rounded-xs bg-bright-cyan/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-bright-cyan">
@@ -227,7 +227,7 @@ export const DocumentDetailPage: React.FC = () => {
                 {activeAnalysis.key_facts.map((fact, idx) => (
                   <div
                     key={idx}
-                    className="panel p-4 bg-white border border-deep-teal/10 rounded-sm shadow-xs flex flex-col justify-between"
+                    className="panel p-4 bg-white border border-deep-teal/10 rounded-sm shadow-xs flex flex-col justify-between min-w-0 overflow-hidden"
                   >
                     <div>
                       <dt className="text-xs font-bold uppercase tracking-wider text-deep-teal/60">
@@ -278,9 +278,9 @@ export const DocumentDetailPage: React.FC = () => {
         </section>
 
         {/* Right Column: Deadlines, Key Dates & Risk Assessment */}
-        <aside className="lg:col-span-5 space-y-10">
+        <aside className="lg:col-span-5 min-w-0 space-y-10">
           {/* Deadlines Panel */}
-          <div className="panel p-6 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
+          <div className="panel p-5 sm:p-6 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
             <div className="flex items-center gap-2 border-b border-deep-teal/10 pb-3">
               <Calendar className="h-4 w-4 text-terracotta" aria-hidden="true" />
               <h2 className={labelClass}>Deadlines &amp; key dates</h2>
@@ -289,9 +289,9 @@ export const DocumentDetailPage: React.FC = () => {
             {activeAnalysis.deadlines && activeAnalysis.deadlines.length > 0 ? (
               <ul className="mt-4 divide-y divide-deep-teal/10">
                 {activeAnalysis.deadlines.map((dl, idx) => (
-                  <li key={idx} className="flex items-baseline justify-between gap-4 py-3.5">
-                    <div>
-                      <p className="text-sm font-bold text-deep-teal">{dl.what}</p>
+                  <li key={idx} className="flex items-start justify-between gap-3 py-3.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-deep-teal break-words">{dl.what}</p>
                       <p className="mt-1 text-sm font-semibold text-terracotta">{dl.date}</p>
                     </div>
                     <span className="rounded-xs border border-deep-teal/15 bg-surface px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-deep-teal/70 shrink-0">
@@ -306,7 +306,7 @@ export const DocumentDetailPage: React.FC = () => {
           </div>
 
           {/* Risk Assessment Panel */}
-          <div className="panel p-6 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
+          <div className="panel p-5 sm:p-6 bg-white border border-deep-teal/10 rounded-sm shadow-xs">
             <div className="flex items-center gap-2 border-b border-deep-teal/10 pb-3">
               <AlertTriangle className="h-4 w-4 text-terracotta" aria-hidden="true" />
               <h2 className={labelClass}>Risk assessment</h2>

@@ -28,7 +28,7 @@ export const Footer: React.FC = () => {
       <div className="shell py-14 sm:py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8">
           {/* Brand Column */}
-          <div className="md:col-span-5">
+          <div className="md:col-span-5 min-w-0">
             <Link
               to="/"
               className="inline-block rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-bright-cyan"
@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Product Links */}
-          <nav aria-label="Product links" className="md:col-span-3 md:col-start-7">
+          <nav aria-label="Product links" className="md:col-span-3 md:col-start-7 min-w-0">
             <h2 className={heading}>Product</h2>
             <button type="button" onClick={() => jump('#how-it-works')} className={link}>
               How it works
@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
           </nav>
 
           {/* Accessibility & Inclusive Design */}
-          <nav aria-label="Accessibility settings" className="md:col-span-4">
+          <nav aria-label="Accessibility settings" className="md:col-span-4 min-w-0">
             <h2 className={heading}>Accessibility</h2>
             <p className="py-1 text-sm text-white/70 leading-relaxed">
               Designed with high contrast, large typography scaling, keyboard shortcuts, and screen
@@ -102,7 +102,7 @@ export const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between text-xs text-white/60">
           <p>© {new Date().getFullYear()} ClearDoc. In-memory document privacy.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-6">
             <span>English (V1 Scope)</span>
             <span className="h-1 w-1 rounded-full bg-bright-cyan" />
             <span>WCAG AA Accessible</span>

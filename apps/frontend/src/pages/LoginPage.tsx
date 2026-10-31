@@ -84,14 +84,14 @@ export const LoginPage: React.FC = () => {
       </aside>
 
       {/* Form area */}
-      <div className="flex items-center justify-center px-5 py-14 sm:px-8 lg:col-span-7">
+      <div className="flex items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:col-span-7">
         <div className="w-full max-w-md">
           <div className="mb-2 inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
             <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
             <span>Account Access</span>
           </div>
 
-          <h1 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-deep-teal">
+          <h1 className="mt-3 text-2xl sm:text-4xl font-extrabold tracking-tight text-deep-teal">
             Welcome back.
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-deep-teal/70 sm:text-base">

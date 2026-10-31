@@ -95,7 +95,7 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
   };
 
   return (
-    <section className="mt-12 rounded-sm border border-deep-teal/15 bg-white p-6 sm:p-8 shadow-xs">
+    <section className="mt-12 rounded-sm border border-deep-teal/15 bg-white p-4 sm:p-8 shadow-xs">
       {/* Section Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-deep-teal/10 pb-5">
         <div>
@@ -109,7 +109,7 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
           <p className="mt-1 text-xs sm:text-sm text-deep-teal/70">
             Answers are strictly grounded in your verified document content without hallucination.
           </p>
-        </div>
+        </div> 
       </div>
 
       {/* Suggested Questions */}
@@ -154,15 +154,15 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
           <div key={item.id} className="space-y-3 pt-2">
             {/* User Question */}
             <div className="flex justify-end">
-              <div className="flex max-w-[85%] items-start gap-2.5 rounded-sm bg-deep-teal px-4 py-3 text-white shadow-xs">
-                <p className="text-sm leading-relaxed">{item.question}</p>
+              <div className="flex max-w-[90%] sm:max-w-[85%] items-start gap-2.5 rounded-sm bg-deep-teal px-3.5 py-2.5 sm:px-4 sm:py-3 text-white shadow-xs">
+                <p className="text-sm leading-relaxed break-words">{item.question}</p>
                 <User className="h-4 w-4 shrink-0 mt-0.5 text-bright-cyan" />
               </div>
             </div>
 
             {/* AI Answer */}
             <div className="flex justify-start">
-              <div className="max-w-[88%] rounded-sm border border-deep-teal/15 bg-surface p-4 sm:p-5 shadow-xs">
+              <div className="max-w-[92%] sm:max-w-[88%] rounded-sm border border-deep-teal/15 bg-surface p-3.5 sm:p-5 shadow-xs">
                 <div className="mb-2 flex items-center justify-between gap-3 border-b border-deep-teal/10 pb-2">
                   <div className="flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-bright-cyan" />
@@ -187,7 +187,7 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
                   </div>
                 </div>
 
-                <p className="text-sm leading-relaxed text-deep-teal/90 whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed text-deep-teal/90 whitespace-pre-wrap break-words">
                   {item.answer}
                 </p>
               </div>
@@ -226,13 +226,13 @@ export const DocumentQA: React.FC<DocumentQAProps> = ({ documentId, language }) 
           onKeyDown={handleKeyDown}
           placeholder="Ask a question about this document (e.g., When is the due date?)"
           disabled={asking}
-          className="field flex-1"
+          className="field flex-1 min-w-0"
         />
         <button
           type="button"
           onClick={() => handleAsk()}
           disabled={!inputText.trim() || asking}
-          className="btn btn-primary px-5 py-3 shadow-xs shrink-0 font-bold disabled:opacity-50"
+          className="btn btn-primary px-4 sm:px-5 py-3 shadow-xs shrink-0 font-bold disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           <span className="hidden sm:inline">Ask</span>

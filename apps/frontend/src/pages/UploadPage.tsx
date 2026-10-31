@@ -125,14 +125,14 @@ export const UploadPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
       {/* Header */}
       <header className="border-b border-deep-teal/10 pb-8">
         <div className="inline-flex items-center gap-2 rounded-sm bg-bright-cyan/10 px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-bright-cyan border border-bright-cyan/20">
           <span className="h-1.5 w-1.5 rounded-full bg-bright-cyan" />
           <span>New Document Analysis</span>
         </div>
-        <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal">
+        <h1 className="mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-deep-teal break-words">
           Upload &amp; understand a document.
         </h1>
         <p className="mt-2.5 max-w-2xl text-base leading-relaxed text-deep-teal/70">
@@ -188,7 +188,7 @@ export const UploadPage: React.FC = () => {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-12">
         {/* Dropzone */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 min-w-0">
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -203,7 +203,7 @@ export const UploadPage: React.FC = () => {
             tabIndex={0}
             role="button"
             aria-label="Upload document dropzone. Press Enter to select a file."
-            className={`flex h-full min-h-[20rem] flex-col items-center justify-center rounded-sm border-2 border-dashed px-6 py-12 text-center transition-all duration-200 cursor-pointer ${
+            className={`flex h-full min-h-[16rem] sm:min-h-[20rem] flex-col items-center justify-center rounded-sm border-2 border-dashed px-4 py-8 sm:px-6 sm:py-12 text-center transition-all duration-200 cursor-pointer ${
               isDragging
                 ? 'border-bright-cyan bg-bright-cyan/5 shadow-md scale-[1.01]'
                 : 'border-deep-teal/20 bg-white hover:border-bright-cyan hover:bg-deep-teal/2 shadow-xs'
@@ -235,7 +235,7 @@ export const UploadPage: React.FC = () => {
 
           {/* Selected File Details */}
           {selectedFile && (
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-sm border border-deep-teal/15 bg-white p-4 shadow-xs animate-rise">
+            <div className="mt-4 flex items-center justify-between gap-3 sm:gap-4 rounded-sm border border-deep-teal/15 bg-white p-3.5 sm:p-4 shadow-xs animate-rise min-w-0 overflow-hidden">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-deep-teal/5 text-deep-teal">
                   {selectedFile.type === 'application/pdf' ? (
@@ -260,7 +260,7 @@ export const UploadPage: React.FC = () => {
                   setUploadSuccess(null);
                   if (fileInputRef.current) fileInputRef.current.value = '';
                 }}
-                className="p-2 text-deep-teal/50 hover:text-terracotta hover:bg-terracotta/10 rounded-sm transition-colors cursor-pointer"
+                className="p-2 text-deep-teal/50 hover:text-terracotta hover:bg-terracotta/10 rounded-sm transition-colors cursor-pointer shrink-0"
                 title="Remove file"
                 aria-label="Remove selected file"
               >
@@ -271,8 +271,8 @@ export const UploadPage: React.FC = () => {
         </div>
 
         {/* Options & Actions */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="panel p-6 space-y-6">
+        <div className="lg:col-span-5 min-w-0 space-y-4">
+          <div className="panel p-5 sm:p-6 space-y-6">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-deep-teal">
                 Analysis Options
