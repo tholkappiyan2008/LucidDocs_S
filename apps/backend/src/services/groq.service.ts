@@ -201,7 +201,7 @@ export async function extractDocumentContent(
         if (extractedImages.length > 0) {
           return {
             mode: 'vision',
-            images: extractedImages.slice(0, 5), // Send up to top 5 pages to prevent payload bloat
+            images: extractedImages.slice(0, 2), // Send top 2 pages to prevent Groq TPM 429 rate-limit errors
           };
         }
       }
@@ -288,9 +288,11 @@ CRITICAL ACCESSIBILITY RULES:
       content: userContent,
     });
   } else {
+    // Truncate overly long documents (max 15,000 chars ~3,500 tokens) to prevent Groq 429 TPM over-quota
+    const safeText = (extracted.text || '[Empty Document]').slice(0, 15000);
     messages.push({
       role: 'user',
-      content: `DOCUMENT CONTENT:\n${extracted.text || '[Empty Document]'}`,
+      content: `DOCUMENT CONTENT:\n${safeText}`,
     });
   }
 
@@ -299,6 +301,7 @@ CRITICAL ACCESSIBILITY RULES:
     messages,
     response_format: { type: 'json_object' },
     temperature: 0.1,
+    max_tokens: 1500, // Explicit limit prevents Groq from reserving full model context against TPM
   };
 
   const responseData = await callGroqWithRetry(payload);
@@ -368,6 +371,7 @@ ${JSON.stringify(originalAnalysis, null, 2)}`;
     ],
     response_format: { type: 'json_object' },
     temperature: 0.1,
+    max_tokens: 1500, // Explicit limit prevents Groq 429 TPM exhaustion
   };
 
   const responseData = await callGroqWithRetry(payload);
@@ -440,6 +444,7 @@ STRICT GROUNDING & ACCESSIBILITY RULES:
     ],
     response_format: { type: 'json_object' },
     temperature: 0.1,
+    max_tokens: 600, // Concise grounded response fits comfortably within rate quotas
   };
 
   const responseData = await callGroqWithRetry(payload);
