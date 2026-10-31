@@ -34,6 +34,7 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       const serverMessage =
         err.response?.data?.error?.message ||
+        err.response?.data?.message ||
         (!err.response
           ? 'Cannot reach ClearDoc server. Please ensure the backend is running.'
           : 'Unable to log in. Please check your credentials and try again.');

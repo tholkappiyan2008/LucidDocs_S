@@ -1,13 +1,50 @@
 import axios from 'axios';
 
-const rawBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-const apiBaseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/+$/, '') : '/api/v1';
+/**
+ * Normalizes the API base URL to ensure consistent communication across environments:
+ * - Local development: defaults to '/api/v1' (forwarded by Vite proxy to http://localhost:5000)
+ * - Production on Vercel: robustly normalizes any variant of the Render backend URL:
+ *     - 'https://example.onrender.com' -> 'https://example.onrender.com/api/v1'
+ *     - 'https://example.onrender.com/' -> 'https://example.onrender.com/api/v1'
+ *     - 'https://example.onrender.com/api' -> 'https://example.onrender.com/api/v1'
+ *     - 'https://example.onrender.com/api/v1' -> 'https://example.onrender.com/api/v1'
+ *     - 'https://example.onrender.com/api/v1/' -> 'https://example.onrender.com/api/v1'
+ */
+export function getApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+  // If not configured, default to '/api/v1' for Vite local proxy
+  if (!envUrl) {
+    return '/api/v1';
+  }
+
+  // Remove wrapping quotes and trailing slashes
+  const clean = envUrl.replace(/^["']|["']$/g, '').replace(/\/+$/, '');
+
+  // If already ends with /api/v1, return as is
+  if (clean.endsWith('/api/v1')) {
+    return clean;
+  }
+
+  // If ends with /api, append /v1
+  if (clean.endsWith('/api')) {
+    return `${clean}/v1`;
+  }
+
+  // If user entered root origin without /api path (e.g. https://cleardoc-api.onrender.com)
+  if (!clean.includes('/api')) {
+    return `${clean}/api/v1`;
+  }
+
+  return clean;
+}
 
 const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 45000, // 45s timeout to handle Render free-tier spin-up delay gracefully
 });
 
 // Interceptor to inject JWT token automatically

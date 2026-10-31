@@ -37,6 +37,7 @@ export const RegisterPage: React.FC = () => {
     } catch (err: any) {
       const serverMessage =
         err.response?.data?.error?.message ||
+        err.response?.data?.message ||
         (!err.response
           ? 'Cannot reach ClearDoc server. Please ensure the backend is running.'
           : 'Unable to complete registration. Please check your details and try again.');
